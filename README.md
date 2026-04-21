@@ -230,13 +230,13 @@ Ver `.env.example` para la lista completa. Las críticas para empezar:
 
 ## Fases del Proyecto
 
-- [x] **Fase 0** — Planificación y especificación
-- [ ] **Fase 1** — Setup inicial ← *Estás aquí*
+- [ ] **Fase 0** — Planificación y especificación
+- [ ] **Fase 1** — Setup inicial 
 - [ ] **Fase 2** — Backend: Auth + CRUD + CSV Upload
 - [ ] **Fase 3** — IA Core: Forecasting + Alertas
 - [ ] **Fase 4** — Optimización de Rutas
 - [ ] **Fase 5** — Frontend Dashboard
-- [ ] **Fase 6** — Chatbot IA + Deploy
+- [X] **Fase 6** — Chatbot IA + Deploy
 
 ---
 
