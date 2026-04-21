@@ -1,0 +1,20 @@
+# Entornos virtuales de Python
+backend/venv/
+backend/venv_linux/
+.env
+
+# Caché de Python
+__pycache__/
+*.pyc
+
+# Base de datos local
+*.db
+backend/supplyai_dev.db
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Scripts de depuración y pruebas sueltos
+backend/debug_*.py
+backend/test_500*.py
