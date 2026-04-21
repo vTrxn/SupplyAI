@@ -1,5 +1,5 @@
  
-# SupplyAI 🚀
+# SupplyAI 
 
 > Plataforma web IA-driven para optimizar cadenas de suministro en PYMES de Bogotá/Colombia.
 > **Objetivo:** Reducir costos logísticos 20–30% mediante forecasting de demanda, alertas predictivas, optimización de rutas y chatbot IA.
