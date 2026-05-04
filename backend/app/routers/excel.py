@@ -155,8 +155,8 @@ async def export_excel(
     result = await db.execute(query)
     products = result.scalars().all()
     
-    if not products:
-        raise HTTPException(status_code=404, detail="No hay productos para exportar")
+    # if not products:
+    #     raise HTTPException(status_code=404, detail="No hay productos para exportar")
 
     # Armar los datos basados en el MAP original
     data = []
@@ -204,8 +204,8 @@ async def export_movements(
     result = await db.execute(query)
     movements = result.scalars().all()
     
-    if not movements:
-        raise HTTPException(status_code=404, detail="No hay movimientos para exportar")
+    # if not movements:
+    #     raise HTTPException(status_code=404, detail="No hay movimientos para exportar")
 
     data = []
     for m in movements:
@@ -239,3 +239,139 @@ async def export_movements(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers=headers
     )
+# ── 5. EXPORTAR PARA POSTGRES (SQL) ──────────────────────────────────
+@router.get("/export/sql")
+async def export_sql(
+    db: AsyncSession = Depends(get_db),
+    credentials=Depends(security)
+):
+    token = decode_token(credentials.credentials)
+    
+    query = select(Product).where(Product.company_id == token.company_id)
+    result = await db.execute(query)
+    products = result.scalars().all()
+    
+    # if not products:
+    #     raise HTTPException(status_code=404, detail="No hay productos para exportar")
+
+    sql_statements = [
+        "-- Exportación de Inventario SupplyAI para PostgreSQL\n",
+        "CREATE TABLE IF NOT EXISTS inventory_import (\n",
+        "    sku VARCHAR(50),\n",
+        "    name VARCHAR(200),\n",
+        "    category VARCHAR(100),\n",
+        "    cost_price NUMERIC,\n",
+        "    sale_price NUMERIC,\n",
+        "    is_active BOOLEAN\n",
+        ");\n\n"
+    ]
+
+    for p in products:
+        active_val = "TRUE" if p.is_active else "FALSE"
+        stmt = f"INSERT INTO inventory_import (sku, name, category, cost_price, sale_price, is_active) VALUES ('{p.sku}', '{p.name}', '{p.category or ''}', {p.cost_price}, {p.sale_price}, {active_val});\n"
+        sql_statements.append(stmt)
+
+    output = io.BytesIO("".join(sql_statements).encode("utf-8"))
+    filename = f"SupplyAI_Postgres_{datetime.now().strftime('%Y%m%d_%H%M')}.sql"
+    
+    headers = {
+        "Content-Disposition": f"attachment; filename={filename}",
+        "Access-Control-Expose-Headers": "Content-Disposition"
+    }
+    
+    return StreamingResponse(output, media_type="text/plain", headers=headers)
+
+# ── 6. EXPORTAR PARA SAP (CSV Específico) ──────────────────────────────
+@router.get("/export/sap")
+async def export_sap(
+    db: AsyncSession = Depends(get_db),
+    credentials=Depends(security)
+):
+    token = decode_token(credentials.credentials)
+    
+    query = select(Product).where(Product.company_id == token.company_id)
+    result = await db.execute(query)
+    products = result.scalars().all()
+    
+    # if not products:
+    #     raise HTTPException(status_code=404, detail="No hay productos para exportar")
+
+    # SAP a menudo requiere formatos específicos, aquí simulamos uno común (ItemCode, ItemName, UoM, etc)
+    data = []
+    for p in products:
+        data.append({
+            "ItemCode": p.sku,
+            "ItemName": p.name,
+            "ForeignName": "",
+            "ItemsGroupCode": p.category or "100",
+            "SalesUnit": p.unit,
+            "InBaseUnit": "Y",
+            "InventoryItem": "Y",
+            "SalesItem": "Y",
+            "PurchaseItem": "Y"
+        })
+
+    df = pd.DataFrame(data)
+    output = io.StringIO()
+    df.to_csv(output, index=False, sep=';') # SAP a veces prefiere punto y coma
+    
+    stream = io.BytesIO(output.getvalue().encode("utf-8"))
+    filename = f"SAP_Import_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+    
+    headers = {
+        "Content-Disposition": f"attachment; filename={filename}",
+        "Access-Control-Expose-Headers": "Content-Disposition"
+    }
+    
+    return StreamingResponse(stream, media_type="text/csv", headers=headers)
+
+# ── 7. EXPORTAR PARA SHOPIFY (CSV de Productos) ───────────────────────
+@router.get("/export/shopify")
+async def export_shopify(
+    db: AsyncSession = Depends(get_db),
+    credentials=Depends(security)
+):
+    token = decode_token(credentials.credentials)
+    
+    query = select(Product).where(Product.company_id == token.company_id)
+    result = await db.execute(query)
+    products = result.scalars().all()
+    
+    # if not products:
+    #     raise HTTPException(status_code=404, detail="No hay productos para exportar")
+
+    # Shopify Product CSV headers
+    data = []
+    for p in products:
+        data.append({
+            "Handle": p.name.lower().replace(" ", "-"),
+            "Title": p.name,
+            "Body (HTML)": p.description or "",
+            "Vendor": "SupplyAI",
+            "Type": p.category or "",
+            "Tags": "",
+            "Published": "true",
+            "Option1 Name": "Title",
+            "Option1 Value": "Default Title",
+            "Variant SKU": p.sku,
+            "Variant Inventory Tracker": "shopify",
+            "Variant Inventory Qty": 0, # Se podría cruzar con la tabla Inventory si es necesario
+            "Variant Price": p.sale_price,
+            "Variant Requires Shipping": "true",
+            "Variant Taxable": "true",
+            "Variant Barcode": ""
+        })
+
+    df = pd.DataFrame(data)
+    output = io.StringIO()
+    df.to_csv(output, index=False)
+    
+    stream = io.BytesIO(output.getvalue().encode("utf-8"))
+    filename = f"Shopify_Products_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+    
+    headers = {
+        "Content-Disposition": f"attachment; filename={filename}",
+        "Access-Control-Expose-Headers": "Content-Disposition"
+    }
+    
+    return StreamingResponse(stream, media_type="text/csv", headers=headers)

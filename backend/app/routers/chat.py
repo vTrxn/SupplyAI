@@ -19,10 +19,14 @@ groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
 client = AsyncGroq(api_key=groq_api_key) if groq_api_key else None
 
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
 class ChatRequest(BaseModel):
     message: str
     context: str | None = None
-
+    history: list[ChatMessage] = []
 
 @router.post("/chat")
 async def chat(
@@ -51,18 +55,20 @@ Reglas estrictas:
 - Eres consciente de que actualmente evalúas las preguntas individualmente, usando este contexto inyectado como tu principal fuente de conocimiento.
 - USA formato markdown para resaltar cosas importantes en **negrita**, pero no abuses de las litas genéricas."""
 
+    messages_payload = [{"role": "system", "content": system_prompt}]
+    
+    # Añadir historial
+    for msg in req.history:
+        # Asegurarnos de que el rol es 'user' o 'assistant'
+        role = "assistant" if msg.role == "ai" else "user"
+        messages_payload.append({"role": role, "content": msg.content})
+
+    # Añadir el mensaje actual
+    messages_payload.append({"role": "user", "content": req.message})
+
     try:
         chat_completion = await client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt,
-                },
-                {
-                    "role": "user",
-                    "content": req.message,
-                }
-            ],
+            messages=messages_payload,
             model="llama-3.1-8b-instant",  # Modelo estándar súper rápido y soportado por Groq
             temperature=0.5,         # Equilibrado entre predictibilidad y creatividad
             max_tokens=600,

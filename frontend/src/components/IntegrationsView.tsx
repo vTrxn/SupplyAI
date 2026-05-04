@@ -21,10 +21,25 @@ export default function IntegrationsView({ t, dark }: IntegrationsViewProps) {
 
   const filtered = INTEGRATIONS.filter(i => filter === "all" || i.type === filter);
 
-  async function handleDownloadExcel(id: string) {
+  async function handleDownload(id: string) {
     setDownloadingId(id);
     const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
-    const url = `${baseUrl}/api/v1/excel/export`;
+    
+    let endpoint = "/api/v1/excel/export";
+    let extension = "xlsx";
+
+    if (id === "postgres") {
+      endpoint = "/api/v1/excel/export/sql";
+      extension = "sql";
+    } else if (id === "sap") {
+      endpoint = "/api/v1/excel/export/sap";
+      extension = "csv";
+    } else if (id === "shopify") {
+      endpoint = "/api/v1/excel/export/shopify";
+      extension = "csv";
+    }
+
+    const url = `${baseUrl}${endpoint}`;
     const token = localStorage.getItem("token") || "";
 
     try {
@@ -35,12 +50,13 @@ export default function IntegrationsView({ t, dark }: IntegrationsViewProps) {
       const a = document.createElement("a");
       a.href = downloadUrl;
       const d = new Date();
-      a.download = `Inventario_Actual_${d.getFullYear()}${(d.getMonth() + 1).toString().padStart(2, '0')}${d.getDate().toString().padStart(2, '0')}_${id}.xlsx`;
+      const timestamp = `${d.getFullYear()}${(d.getMonth() + 1).toString().padStart(2, '0')}${d.getDate().toString().padStart(2, '0')}`;
+      a.download = `SupplyAI_${id}_${timestamp}.${extension}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
     } catch (err) {
-      alert("Error al descargar excel");
+      alert(`Error al descargar ${id}`);
     } finally {
       setTimeout(() => setDownloadingId(null), 500);
     }
@@ -129,8 +145,8 @@ export default function IntegrationsView({ t, dark }: IntegrationsViewProps) {
                 </div>
 
                 <div style={{ marginTop: "auto", paddingTop: 16 }}>
-                  <button className="btn" style={{ width: "100%", background: t.accent, color: "white", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={() => handleDownloadExcel(item.id)} disabled={downloadingId === item.id}>
-                    {downloadingId === item.id ? "Descargando..." : "Descargar Excel"}
+                  <button className="btn" style={{ width: "100%", background: t.accent, color: "white", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={() => handleDownload(item.id)} disabled={downloadingId === item.id}>
+                    {downloadingId === item.id ? "Descargando..." : (item.id === "excel" ? "Descargar Excel" : `Exportar ${item.name}`)}
                   </button>
                 </div>
               </div>

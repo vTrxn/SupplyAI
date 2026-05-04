@@ -59,12 +59,15 @@ export default function ChatPanel({ initialMessage, onClose, productos, alertas 
     setLoading(true);
     try {
       const token = localStorage.getItem("token") || "";
-      const alertStr = alertas.slice(0, 8).map(a => `- [${a.severity.toUpperCase()}] ${a.message} (Prod-ID: ${a.sku}, Stock actual: ${a.current_stock})`).join("\\n");
+      const alertStr = alertas.slice(0, 20).map(a => `- [${a.severity.toUpperCase()}] ${a.message} (Prod-ID: ${a.sku}, Stock actual: ${a.current_stock})`).join("\\n");
       const context = `Total productos: ${productos.length}. Total alertas generales: ${alertas.length}.\\n🚨 RESUMEN DE LAS ALERTAS ACTIVAS MÁS IMPORTANTES:\\n${alertStr || 'No hay alertas'}`;
+      
+      const history = messages.slice(-20).map(m => ({ role: m.role, content: m.text }));
+      
       const res = await fetch("http://localhost:8000/api/v1/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: textMsg, context }),
+        body: JSON.stringify({ message: textMsg, context, history }),
       });
       const data = await res.json();
       setMessages(prev => [...prev, { role: "ai", text: data.response || data.message || "Sin respuesta del servidor.", ts: new Date() }]);

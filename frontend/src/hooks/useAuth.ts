@@ -1,6 +1,5 @@
 // frontend/src/hooks/useAuth.ts
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 
 export function useAuth() {
@@ -8,30 +7,18 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Obtener sesion actual
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      if (data.session) {
-        localStorage.setItem("token", data.session.access_token);
-      }
-      setLoading(false);
-    });
+    // BYPASS TEMPORAL: Mock de sesión para entrar directo
+    const mockSession = {
+      access_token: "dev-token-bypass",
+      user: { id: "1", email: "demo@supplyai.com" }
+    } as unknown as Session;
 
-    // Escuchar cambios de sesion
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        localStorage.setItem("token", session.access_token);
-      } else {
-        localStorage.removeItem("token");
-      }
-    });
-
-    return () => listener.subscription.unsubscribe();
+    setSession(mockSession);
+    localStorage.setItem("token", "dev-token-bypass");
+    setLoading(false);
   }, []);
 
   async function logout() {
-    await supabase.auth.signOut();
     localStorage.removeItem("token");
     window.location.href = "/";
   }
