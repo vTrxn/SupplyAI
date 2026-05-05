@@ -10,11 +10,11 @@
 
 | Feature | Descripción |
 |---|---|
-| 📦 **Inventario en tiempo real** | Tracking con alertas visuales (rojo/amarillo/verde) |
-| 🤖 **Forecasting IA** | Predicción demanda con Prophet + XGBoost + IPC DANE |
-| 🔔 **Alertas predictivas** | "Stockout probable en 5 días para Producto X" |
-| 🗺️ **Rutas optimizadas** | OR-Tools + Google Maps para entregas en Bogotá |
-| 💬 **Chatbot IA** | Consultas en lenguaje natural sobre tu inventario |
+|  **Inventario en tiempo real** | Tracking con alertas visuales (rojo/amarillo/verde) |
+|  **Forecasting IA** | Predicción demanda con Prophet + XGBoost + IPC DANE |
+|  **Alertas predictivas** | "Stockout probable en 5 días para Producto X" |
+|  **Rutas optimizadas** | OR-Tools + Google Maps para entregas en Bogotá |
+|  **Chatbot IA** | Consultas en lenguaje natural sobre tu inventario |
 
 ---
 
@@ -221,10 +221,10 @@ Ver `.env.example` para la lista completa. Las críticas para empezar:
 
 | Variable | Requerida | Descripción |
 |---|---|---|
-| `SECRET_KEY` | ✅ Sí | Clave para firmar JWT tokens |
-| `DATABASE_URL` | ✅ Sí | URL de conexión DB (SQLite en dev) |
-| `GOOGLE_MAPS_API_KEY` | ⚠️ Fase 3 | Para optimización de rutas reales |
-| `GROQ_API_KEY` | ⚠️ Fase 5 | Para chatbot IA con Llama 3.1 |
+| `SECRET_KEY` |  Sí | Clave para firmar JWT tokens |
+| `DATABASE_URL` |  Sí | URL de conexión DB (SQLite en dev) |
+| `GOOGLE_MAPS_API_KEY` |  Fase 3 | Para optimización de rutas reales |
+| `GROQ_API_KEY` |  Fase 5 | Para chatbot IA con Llama 3.1 |
 
 ---
 
