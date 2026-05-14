@@ -1,14 +1,13 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
-const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+// Usamos valores falsos en caso de que estén vacíos para que la app no se rompa (bypass de auth)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://dummy-url.supabase.co";
+const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY || "dummy-key";
 
-// Mantenemos la configuración de Auth en su estado natural (true)
-// para que el inicio de sesión con Google (OAuth) funcione perfectamente.
 export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON, {
   auth: {
-    autoRefreshToken: true,
-    detectSessionInUrl: true, // CRÍTICO para que lea la respuesta de Google
-    persistSession: true,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+    persistSession: false,
   },
 });

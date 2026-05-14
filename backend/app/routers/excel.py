@@ -5,16 +5,14 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from fastapi.responses import StreamingResponse
-from fastapi.security import HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.inventory import Product, Inventory, InventoryMovement, MovementType
-from app.utils.jwt import decode_token
+from app.dependencies import get_token_data
 
 router = APIRouter(prefix="/excel", tags=["Excel"])
-security = HTTPBearer()
 
 # Mapeo de columnas mostradas en Excel a campos en la base de datos
 EXCEL_COLUMNS_MAP = {
@@ -33,9 +31,8 @@ async def generate_template(
     rows: int = Query(50, ge=1, le=10000, description="Número de filas vacías a generar"),
     cols: Optional[str] = Query(None, description="Columnas separadas por coma, ej. 'ID,Nombre'"),
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security)
+    token=Depends(get_token_data)
 ):
-    token = decode_token(credentials.credentials)
     
     if cols:
         selected_cols = [c.strip() for c in cols.split(",") if c.strip() in EXCEL_COLUMNS_MAP]
@@ -69,9 +66,8 @@ async def generate_template(
 async def import_excel(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security)
+    token=Depends(get_token_data)
 ):
-    token = decode_token(credentials.credentials)
     
     if not file.filename.endswith(".xlsx") and not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Formato inválido. Usa .xlsx o .csv")
@@ -146,9 +142,8 @@ async def import_excel(
 @router.get("/export")
 async def export_excel(
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security)
+    token=Depends(get_token_data)
 ):
-    token = decode_token(credentials.credentials)
     
     # Obtener productos
     query = select(Product).where(Product.company_id == token.company_id)
@@ -195,9 +190,8 @@ async def export_excel(
 @router.get("/export-movements")
 async def export_movements(
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security)
+    token=Depends(get_token_data)
 ):
-    token = decode_token(credentials.credentials)
     
     from sqlalchemy.orm import joinedload
     query = select(InventoryMovement).options(joinedload(InventoryMovement.product)).where(InventoryMovement.company_id == token.company_id).order_by(InventoryMovement.date.desc())
@@ -243,9 +237,8 @@ async def export_movements(
 @router.get("/export/sql")
 async def export_sql(
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security)
+    token=Depends(get_token_data)
 ):
-    token = decode_token(credentials.credentials)
     
     query = select(Product).where(Product.company_id == token.company_id)
     result = await db.execute(query)
@@ -285,9 +278,8 @@ async def export_sql(
 @router.get("/export/sap")
 async def export_sap(
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security)
+    token=Depends(get_token_data)
 ):
-    token = decode_token(credentials.credentials)
     
     query = select(Product).where(Product.company_id == token.company_id)
     result = await db.execute(query)
@@ -329,9 +321,8 @@ async def export_sap(
 @router.get("/export/shopify")
 async def export_shopify(
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security)
+    token=Depends(get_token_data)
 ):
-    token = decode_token(credentials.credentials)
     
     query = select(Product).where(Product.company_id == token.company_id)
     result = await db.execute(query)

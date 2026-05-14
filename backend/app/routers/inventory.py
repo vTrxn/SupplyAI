@@ -14,10 +14,9 @@ from app.schemas.inventory import (
     MovementCreate, MovementResponse,
     ProductCreate, ProductResponse, ProductUpdate,
 )
-from app.utils.jwt import decode_token
+from app.dependencies import get_token_data
 
 router   = APIRouter(prefix="/inventory", tags=["Inventario"])
-security = HTTPBearer()
 
 
 async def _ensure_company_and_user(db: AsyncSession, token_data):
@@ -68,9 +67,8 @@ def _product_with_stock(product, stock_map: dict) -> ProductResponse:
 async def crear_producto(
     data: ProductCreate,
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    token = decode_token(credentials.credentials)
     await _ensure_company_and_user(db, token)
 
     dup = await db.execute(
@@ -123,9 +121,8 @@ async def crear_producto(
 async def listar_productos(
     category: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    token = decode_token(credentials.credentials)
     await _ensure_company_and_user(db, token)
 
     query = select(Product).where(Product.company_id == token.company_id)
@@ -143,9 +140,8 @@ async def listar_productos(
 async def obtener_producto(
     product_id: str,
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    token = decode_token(credentials.credentials)
     result = await db.execute(
         select(Product).where(
             Product.id         == product_id,
@@ -165,9 +161,8 @@ async def actualizar_producto(
     product_id: str,
     data: ProductUpdate,
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    token = decode_token(credentials.credentials)
     result = await db.execute(
         select(Product).where(
             Product.id         == product_id,
@@ -192,9 +187,8 @@ async def actualizar_producto(
 async def eliminar_producto(
     product_id: str,
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    token = decode_token(credentials.credentials)
     result = await db.execute(
         select(Product).where(
             Product.id         == product_id,
@@ -221,9 +215,8 @@ async def eliminar_producto(
 @router.delete("/movements", status_code=204)
 async def limpiar_movimientos(
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    token = decode_token(credentials.credentials)
     await db.execute(delete(InventoryMovement).where(InventoryMovement.company_id == token.company_id))
     await db.commit()
 
@@ -231,9 +224,8 @@ async def limpiar_movimientos(
 @router.get("/movements", response_model=List[MovementResponse])
 async def todos_movimientos(
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    token = decode_token(credentials.credentials)
     result = await db.execute(
         select(InventoryMovement)
         .where(InventoryMovement.company_id == token.company_id)
@@ -247,9 +239,8 @@ async def todos_movimientos(
 async def registrar_movimiento(
     data: MovementCreate,
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    token = decode_token(credentials.credentials)
 
     result = await db.execute(
         select(Inventory).where(
@@ -304,9 +295,8 @@ async def registrar_movimiento(
 async def historial_movimientos(
     product_id: str,
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    token = decode_token(credentials.credentials)
     result = await db.execute(
         select(InventoryMovement)
         .where(

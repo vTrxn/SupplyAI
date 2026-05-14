@@ -121,9 +121,7 @@ export default function RutasView({ t, dark = true }: Props) {
       }
     });
 
-    const tileUrl = dark
-      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+    const tileUrl = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
     L.tileLayer(tileUrl, {
       attribution: "© OpenStreetMap contributors © CARTO",
@@ -168,7 +166,7 @@ export default function RutasView({ t, dark = true }: Props) {
 
     if (res.geometria?.length > 0) {
       const latlngs = res.geometria.map((c: number[]) => [c[1], c[0]]);
-      const poly = L.polyline(latlngs, { color: dark ? "#7c6ef7" : "#5b4de8", weight: 5, opacity: .85 }).addTo(map);
+      const poly = L.polyline(latlngs, { color: "#5b4de8", weight: 5, opacity: .85 }).addTo(map);
       capas.push(poly);
       map.fitBounds(poly.getBounds(), { padding: [40, 40] });
     }
@@ -266,7 +264,7 @@ export default function RutasView({ t, dark = true }: Props) {
       </div>
 
       {/* ── ENTREGA ── */}
-      <div style={{ display: tipo === "entrega" ? "flex" : "none", flexDirection: "row", gap: 32, alignItems: "stretch", height: "calc(100vh - 200px)" }}>
+      <div style={{ display: tipo === "entrega" ? "flex" : "none", flexDirection: "row", gap: 24, alignItems: "stretch", height: "calc(100vh - 340px)" }}>
 
         {/* Panel lateral izquierdo full height */}
         <div className="ascroll" style={{ width: 400, display: "flex", flexDirection: "column", gap: 20, flexShrink: 0, overflowY: "auto", paddingRight: 8 }}>

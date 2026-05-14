@@ -6,13 +6,12 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from groq import AsyncGroq
 
-from app.utils.jwt import decode_token
+from app.dependencies import get_token_data
 
-# Cargar variables del .env
-load_dotenv()
+# Cargar variables del .env forzando sobreescritura
+load_dotenv(override=True)
 
 router = APIRouter(prefix="/ai", tags=["Asistente IA"])
-security = HTTPBearer()
 
 # Intentamos inicializar el cliente de Groq si hay API key
 groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
@@ -31,9 +30,8 @@ class ChatRequest(BaseModel):
 @router.post("/chat")
 async def chat(
     req: ChatRequest,
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    decode_token(credentials.credentials)  # Validar token
 
     if not client:
         return {

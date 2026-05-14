@@ -7,18 +7,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.inventory import Inventory, Product
-from app.utils.jwt import decode_token
+from app.dependencies import get_token_data
 
 router = APIRouter(prefix="/forecast", tags=["Forecast IA"])
-security = HTTPBearer()
 
 
 @router.get("")
 async def obtener_forecast(
     db: AsyncSession = Depends(get_db),
-    credentials=Depends(security),
+    token=Depends(get_token_data),
 ):
-    token = decode_token(credentials.credentials)
 
     result = await db.execute(
         select(Product, Inventory)

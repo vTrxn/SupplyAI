@@ -7,14 +7,12 @@ POST /routes/geocodificar → convierte dirección a coordenadas
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import Optional
-from app.utils.jwt import decode_token
+from app.dependencies import get_token_data
 from app.services.routes_service import planificar_ruta, geocodificar_direccion
 
 router   = APIRouter(prefix="/routes", tags=["Rutas"])
-security = HTTPBearer()
 
 
 class PuntoRuta(BaseModel):
@@ -36,14 +34,7 @@ class GeocodeRequest(BaseModel):
 
 
 @router.post("/planificar")
-async def planificar(body: PlanificarRequest, credentials=Depends(security)):
-    """
-    Planifica y optimiza una ruta completa.
-    - Geocodifica direcciones automáticamente
-    - Optimiza el orden de paradas (TSP greedy)
-    - Calcula ruta real por calles de Bogotá via OSRM
-    """
-    decode_token(credentials.credentials)
+async def planificar(body: PlanificarRequest, token=Depends(get_token_data)):
 
     if not body.paradas:
         raise HTTPException(status_code=400, detail="Debes agregar al menos una parada")
@@ -58,9 +49,8 @@ async def planificar(body: PlanificarRequest, credentials=Depends(security)):
 
 
 @router.post("/geocodificar")
-async def geocodificar(body: GeocodeRequest, credentials=Depends(security)):
+async def geocodificar(body: GeocodeRequest, token=Depends(get_token_data)):
     """Convierte una dirección de Bogotá a coordenadas lat/lng."""
-    decode_token(credentials.credentials)
     coords = await geocodificar_direccion(body.direccion)
     if not coords:
         raise HTTPException(status_code=404, detail=f"No se encontró la dirección: {body.direccion}")

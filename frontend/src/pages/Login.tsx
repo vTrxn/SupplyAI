@@ -10,7 +10,7 @@ export default function Login() {
   const [error,    setError]    = useState("");
   const [msg,      setMsg]      = useState("");
 
-  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = true; // Forzado a fondo negro por petición del usuario
   const t = dark ? {
     bg:"#0f0f13", bg2:"#16161d", border:"rgba(255, 255, 255, 0.05)",
     text:"#e8e8f0", textSub:"#9898b8", textMid:"#6b6b85",
@@ -26,85 +26,31 @@ export default function Login() {
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true); setError(""); setMsg("");
-    try {
-      const { error } = await supabase.auth.signInWithOtp({ 
-        email, 
-        options: { shouldCreateUser: true } 
-      });
-      if (error) throw error;
-      setMsg("✅ Código enviado. Revisa tu correo.");
+    // Bypass: Simulate sending OTP
+    setTimeout(() => {
+      setMsg("✅ Código enviado. (Simulado)");
       setStep("otp");
-    } catch (err: any) {
-      setError(err.message || "Error al enviar código");
-    } finally {
       setLoading(false);
-    }
+    }, 600);
   }
 
   async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true); setError(""); setMsg("");
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-      if (error) throw error;
-      if (data.session) {
-        localStorage.setItem("token", data.session.access_token);
-        localStorage.setItem("sb_session", JSON.stringify(data.session));
-      }
+    // Bypass: Simulate verification success
+    setTimeout(() => {
+      localStorage.setItem("token", "dev-token-bypass");
       window.location.href = "/";
-    } catch (err: any) {
-      setError(err.message || "Código inválido");
-    } finally {
-      setLoading(false);
-    }
+    }, 600);
   }
 
   async function openOAuthPopup(provider: "google" | "azure") {
     setLoading(true); setError("");
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { 
-        redirectTo: window.location.origin + "/",
-        skipBrowserRedirect: true,
-        queryParams: {
-          prompt: "select_account"
-        }
-      },
-    });
-
-    if (error) { 
-      setError(error.message); 
-      setLoading(false); 
-      return; 
-    }
-
-    if (data?.url) {
-      const width = 500;
-      const height = 650;
-      const left = window.screenX + (window.outerWidth - width) / 2;
-      const top = window.screenY + (window.outerHeight - height) / 2.5;
-
-      const popup = window.open(
-        data.url, 
-        `SupabaseOAuthPopup-${provider}`, 
-        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
-      );
-
-      if (!popup) {
-        // If popup block, fallback to redirect
-        window.location.href = data.url;
-      } else {
-        const timer = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(timer);
-            setLoading(false);
-          }
-        }, 500);
-      }
-    } else {
-      setLoading(false);
-    }
+    // Bypass: Simulate OAuth success
+    setTimeout(() => {
+      localStorage.setItem("token", "dev-token-bypass");
+      window.location.href = "/";
+    }, 600);
   }
 
   async function handleGoogle() {
