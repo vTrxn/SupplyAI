@@ -19,9 +19,9 @@ function TypewriterText({ text }: { text: string }) {
     let i = 0;
     const interval = setInterval(() => {
       setDisplayed(text.substring(0, i));
-      i++;
-      if (i > text.length) clearInterval(interval);
-    }, 15);
+      i += 3;
+      if (i > text.length + 3) clearInterval(interval);
+    }, 10);
     return () => clearInterval(interval);
   }, [text]);
   return (

@@ -57,3 +57,4 @@ async def create_tables() -> None:
 
 def _import_all_models() -> None:
     from app.models import user  # noqa: F401
+    from app.models import inventory  # noqa: F401
