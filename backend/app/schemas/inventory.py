@@ -18,6 +18,7 @@ class ProductCreate(BaseModel):
     reorder_point: float           = 0.0
     stock_inicial: float           = 0.0   # si > 0 crea movimiento de entrada automático
     image_url:     Optional[str]   = None  # URL externa de la imagen del producto
+    provider_id:   Optional[str]   = None
 
 
 class ProductUpdate(BaseModel):
@@ -32,6 +33,7 @@ class ProductUpdate(BaseModel):
     reorder_point: Optional[float] = None
     is_active:     Optional[bool]  = None
     image_url:     Optional[str]   = None
+    provider_id:   Optional[str]   = None
 
 
 class ProductResponse(BaseModel):
@@ -51,6 +53,7 @@ class ProductResponse(BaseModel):
     created_at:    datetime
     current_stock: float = 0.0
     image_url:     Optional[str]  = None
+    provider_id:   Optional[str]  = None
     model_config = {"from_attributes": True}
 
 

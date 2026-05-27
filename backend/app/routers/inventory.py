@@ -2,10 +2,13 @@
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.security import HTTPBearer
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+import os
+import shutil
+import uuid
 
 from app.database import get_db
 from app.models.inventory import Inventory, InventoryMovement, MovementType, Product
@@ -62,6 +65,23 @@ def _product_with_stock(product, stock_map: dict) -> ProductResponse:
 
 
 # ── PRODUCTOS ──────────────────────────────────────────────────────────────────
+
+@router.post("/upload-image", status_code=201)
+async def upload_image(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    token=Depends(get_token_data),
+):
+    await _ensure_company_and_user(db, token)
+    ext = file.filename.split(".")[-1] if "." in file.filename else "png"
+    filename = f"{uuid.uuid4()}.{ext}"
+    filepath = os.path.join("uploads", filename)
+    with open(filepath, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    # Asumimos que el backend y frontend corren en localhost:8000
+    # Seria mejor con una variable de entorno, pero por simplicidad retornamos ruta completa
+    return {"url": f"http://localhost:8000/uploads/{filename}"}
+
 
 @router.post("/products", response_model=ProductResponse, status_code=201)
 async def crear_producto(

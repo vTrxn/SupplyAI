@@ -34,6 +34,7 @@ class Company(Base):
     products    = relationship("Product",           back_populates="company", lazy="selectin")
     inventories = relationship("Inventory",         back_populates="company", lazy="selectin")
     movements   = relationship("InventoryMovement", back_populates="company", lazy="selectin")
+    providers   = relationship("Provider",          back_populates="company", lazy="selectin")
 
     def __repr__(self):
         return f"<Company id={self.id} name={self.name}>"

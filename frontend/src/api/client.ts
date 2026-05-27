@@ -46,6 +46,14 @@ export interface Product {
   created_at: string;
   current_stock: number;
   image_url?: string;    // stock actual desde tabla Inventory
+  provider_id?: string;
+}
+
+export interface Provider {
+  id: string;
+  company_id: string;
+  name: string;
+  created_at: string;
 }
 
 export interface UserProfile {
@@ -99,6 +107,24 @@ export const createProduct = (data: Partial<Product>) => apiFetch<Product>("/inv
 export const updateProduct = (id: string, data: Partial<Product>) => apiFetch<Product>(`/inventory/products/${id}`, { method: "PATCH", body: JSON.stringify(data) });
 export const deleteProduct = (id: string) => apiFetch<void>(`/inventory/products/${id}`, { method: "DELETE" });
 
+export const uploadImage = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  
+  const res = await fetch(`${BASE_URL}/inventory/upload-image`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${getToken()}`,
+    },
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `Error ${res.status}` }));
+    throw new Error(err.detail || `Error ${res.status}`);
+  }
+  return res.json() as Promise<{url: string}>;
+};
+
 // ── Movimientos ────────────────────────────────────────────────────────────────
 export const getMovements = () => apiFetch<Movement[]>("/inventory/movements");
 export const createMovement = (data: MovementCreate) => apiFetch<Movement>("/inventory/movements", { method: "POST", body: JSON.stringify(data) });
@@ -106,3 +132,9 @@ export const clearMovements = () => apiFetch<void>("/inventory/movements", { met
 
 // ── Alertas ────────────────────────────────────────────────────────────────────
 export const getAlerts = () => apiFetch<Alert[]>("/alerts");
+
+// ── Proveedores ────────────────────────────────────────────────────────────────
+export const getProviders = () => apiFetch<Provider[]>("/providers");
+export const createProvider = (data: Partial<Provider>) => apiFetch<Provider>("/providers", { method: "POST", body: JSON.stringify(data) });
+export const updateProvider = (id: string, data: Partial<Provider>) => apiFetch<Provider>(`/providers/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+export const deleteProvider = (id: string) => apiFetch<void>(`/providers/${id}`, { method: "DELETE" });

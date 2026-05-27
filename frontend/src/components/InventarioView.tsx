@@ -1,28 +1,46 @@
-// frontend/src/components/InventarioView.tsx
-import { useState, useMemo } from "react";
-import { type Product, createMovement } from "../api/client";
+import React, { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
+import { type Product, type Provider, createMovement, updateProduct, deleteProduct, createProvider } from "../api/client";
 
 interface Props {
   t: any;
   dark?: boolean;
   productos: Product[];
+  providers: Provider[];
   onUpdate: () => void;
   onCrear: () => void;
+  onEdit: (p: Product) => void;
 }
 
 type SortKey = "name" | "current_stock" | "sale_price" | "category";
 type SortDir = "asc" | "desc";
 type Filtro  = "todos" | "activos" | "inactivos" | "bajo_stock" | "agotados" | "excedidos";
 
-export default function InventarioView({ t, productos, onUpdate, onCrear }: Props) {
+const SearchIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+export default function InventarioView({ t, productos, providers, onUpdate, onCrear, onEdit }: Props) {
   const [search,    setSearch]    = useState("");
   const [filtro,    setFiltro]    = useState<Filtro>("todos");
   const [sortKey,   setSortKey]   = useState<SortKey>("name");
   const [sortDir,   setSortDir]   = useState<SortDir>("asc");
   const [catFiltro, setCatFiltro] = useState("todas");
-  const [editStockId, setEditStockId] = useState<string | null>(null);
-  const [editStockVal, setEditStockVal] = useState("");
+  
+  const [selectedProdId, setSelectedProdId] = useState<string | null>(null);
+
+  const [addStockProdId, setAddStockProdId] = useState<string | null>(null);
+  const [addStockVal, setAddStockVal] = useState("");
   const [savingStock, setSavingStock] = useState(false);
+
+  const [confirmEmptyId, setConfirmEmptyId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  
+  const [changeProvId, setChangeProvId] = useState<string | null>(null);
+  const [newProvName, setNewProvName] = useState("");
+  const [selectedProvId, setSelectedProvId] = useState("");
 
   const categorias = useMemo(() => {
     const cats = new Set(productos.map(p => p.category).filter(Boolean) as string[]);
@@ -71,23 +89,66 @@ export default function InventarioView({ t, productos, onUpdate, onCrear }: Prop
     else { setSortKey(key); setSortDir("asc"); }
   }
 
-  async function guardarStock(prod: Product) {
-    const qty = parseFloat(editStockVal);
+  async function guardarStock(prodId: string) {
+    const qty = parseFloat(addStockVal);
     if (isNaN(qty) || qty <= 0) return;
     setSavingStock(true);
     try {
       await createMovement({
-        product_id: prod.id,
-        type:       "ajuste",
+        product_id: prodId,
+        type:       "entrada",
         quantity:   qty,
-        reason:     "Edición rápida desde inventario",
+        reason:     "Adición rápida",
         reference:  null, unit_price: null, date: null,
       });
-      setEditStockId(null);
-      setEditStockVal("");
+      setAddStockProdId(null);
+      setAddStockVal("");
       onUpdate();
     } catch(e) {}
     finally { setSavingStock(false); }
+  }
+
+  async function doEmpty(prodId: string) {
+    const p = productos.find(x => x.id === prodId);
+    if (!p) return;
+    try {
+      if (p.current_stock > 0) {
+        await createMovement({
+          product_id: p.id,
+          type: "salida",
+          quantity: p.current_stock,
+          reason: "Vaciado manual de stock",
+          reference: null, unit_price: null, date: null
+        });
+      }
+      setConfirmEmptyId(null);
+      onUpdate();
+    } catch (e: any) { alert(e.message); }
+  }
+
+  async function doDelete(prodId: string) {
+    try {
+      await deleteProduct(prodId);
+      setConfirmDeleteId(null);
+      onUpdate();
+    } catch (e: any) { alert(e.message); }
+  }
+
+  async function doChangeProvider(prodId: string) {
+    try {
+      let provId = selectedProvId;
+      if (!provId && newProvName.trim()) {
+        const prov = await createProvider({ name: newProvName.trim() });
+        provId = prov.id;
+      }
+      if (provId) {
+        await updateProduct(prodId, { provider_id: provId });
+        setChangeProvId(null);
+        setNewProvName("");
+        setSelectedProvId("");
+        onUpdate();
+      }
+    } catch (e: any) { alert(e.message); }
   }
 
   const FILTROS: Array<{id: Filtro; label: string; count: number; color: string}> = [
@@ -99,9 +160,9 @@ export default function InventarioView({ t, productos, onUpdate, onCrear }: Prop
   ];
 
   return (
-    <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Stats Cards */}
-      <div className="metrics-grid">
+    <>
+      <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        <div className="metrics-grid">
         {[
           { label: "Total", val: stats.total, sub: "Productos", color: t.accent, icon: "📦" },
           { label: "Activos", val: stats.activos, sub: "Venta activa", color: t.green, icon: "✅" },
@@ -124,12 +185,10 @@ export default function InventarioView({ t, productos, onUpdate, onCrear }: Prop
       </div>
 
       <div className="card" style={{ padding: "24px 32px" }}>
-        {/* Consolidated Header: Search, Filters & Actions */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
-          {/* Left side: Search, Category, Status */}
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", flex: 1 }}>
             <div className="search-wrapper" style={{ minWidth: 260, flex: "1 1 auto", maxWidth: 350 }}>
-              <span className="search-icon">🔍</span>
+              <span className="search-icon"><SearchIcon /></span>
               <input
                 className="search-input"
                 placeholder="Buscar por nombre, ID o..."
@@ -170,7 +229,6 @@ export default function InventarioView({ t, productos, onUpdate, onCrear }: Prop
             </div>
           </div>
 
-          {/* Right side: Actions */}
           <div style={{ display: "flex", gap: 12, flexShrink: 0 }}>
             <button className="btn btn-ghost" onClick={() => {}} style={{ padding: "8px 16px" }}>
               <span style={{ fontSize: 16 }}>📥</span> CSV
@@ -181,15 +239,15 @@ export default function InventarioView({ t, productos, onUpdate, onCrear }: Prop
           </div>
         </div>
 
-        <div className="table-container">
-          <table className="custom-table" style={{ borderSpacing: "0 12px" }}>
+        <div className="table-container" style={{ minHeight: 300 }} onClick={() => setSelectedProdId(null)}>
+          <table className="custom-table" style={{ borderSpacing: "0 8px" }}>
             <thead>
               <tr>
                 <th onClick={() => toggleSort("name")} style={{ cursor: "pointer" }}>Producto {sortKey === "name" && (sortDir === "asc" ? "↑" : "↓")}</th>
                 <th onClick={() => toggleSort("category")} style={{ cursor: "pointer" }}>Categoría {sortKey === "category" && (sortDir === "asc" ? "↑" : "↓")}</th>
+                <th>Proveedor</th>
                 <th onClick={() => toggleSort("current_stock")} style={{ cursor: "pointer" }}>Stock {sortKey === "current_stock" && (sortDir === "asc" ? "↑" : "↓")}</th>
                 <th onClick={() => toggleSort("sale_price")} style={{ cursor: "pointer" }}>Precio {sortKey === "sale_price" && (sortDir === "asc" ? "↑" : "↓")}</th>
-                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -197,66 +255,164 @@ export default function InventarioView({ t, productos, onUpdate, onCrear }: Prop
                 const stock = p.current_stock ?? 0;
                 const stockBajo = p.min_stock > 0 && stock <= p.min_stock;
                 const stockColor = stock === 0 ? t.red : stockBajo ? t.warn : t.green;
-                const editando = editStockId === p.id;
+                const isSelected = selectedProdId === p.id;
+                const provName = providers.find(prov => prov.id === p.provider_id)?.name || "Sin proveedor";
 
                 return (
-                  <tr key={p.id}>
-                    <td>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        {p.image_url ? (
-                          <img src={p.image_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover" }} />
-                        ) : (
-                          <div style={{ width: 40, height: 40, borderRadius: 8, background: t.bg3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>📦</div>
-                        )}
-                        <div>
-                          <div style={{ fontWeight: 800 }}>{p.name}</div>
-                          <div style={{ fontSize: 11, color: t.textSub, fontFamily: "JetBrains Mono" }}>{p.sku}</div>
+                  <React.Fragment key={p.id}>
+                    <tr 
+                      onClick={(e) => { e.stopPropagation(); setSelectedProdId(isSelected ? null : p.id); }}
+                      style={{ 
+                        cursor: "pointer", 
+                        background: isSelected ? t.accentBg : "transparent",
+                        transition: "background 0.2s"
+                      }}
+                    >
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          {p.image_url ? (
+                            <img src={p.image_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover" }} />
+                          ) : (
+                            <div style={{ width: 40, height: 40, borderRadius: 8, background: t.bg3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>📦</div>
+                          )}
+                          <div>
+                            <div style={{ fontWeight: 800, color: isSelected ? t.accent : t.text }}>{p.name}</div>
+                            <div style={{ fontSize: 11, color: t.textSub, fontFamily: "JetBrains Mono" }}>{p.sku}</div>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td><span className="badge" style={{ background: t.bg3, color: t.textSub }}>{p.category || "General"}</span></td>
-                    <td>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        <span style={{ fontWeight: 800, color: stockColor, fontFamily: "JetBrains Mono", fontSize: 16 }}>{stock} {p.unit}</span>
-                        <div style={{ width: 100, height: 4, background: t.border, borderRadius: 2, overflow: "hidden" }}>
-                          <div style={{ 
-                            width: `${Math.min((stock / (p.max_stock || 100)) * 100, 100)}%`, 
-                            height: "100%", 
-                            background: stockColor 
-                          }} />
+                      </td>
+                      <td><span className="badge" style={{ background: t.bg3, color: t.textSub }}>{p.category || "General"}</span></td>
+                      <td><span style={{ fontSize: 13, color: t.textSub }}>{provName}</span></td>
+                      <td>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <span style={{ fontWeight: 800, color: stockColor, fontFamily: "JetBrains Mono", fontSize: 16 }}>{stock} {p.unit}</span>
+                          <div style={{ width: 100, height: 4, background: t.border, borderRadius: 2, overflow: "hidden" }}>
+                            <div style={{ 
+                              width: `${Math.min((stock / (p.max_stock || 100)) * 100, 100)}%`, 
+                              height: "100%", 
+                              background: stockColor 
+                            }} />
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td style={{ fontWeight: 800, color: t.accent, fontFamily: "JetBrains Mono" }}>${p.sale_price.toLocaleString()}</td>
-                    <td>
-                      {editando ? (
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <input
-                            type="number"
-                            className="search-input"
-                            style={{ width: 80, padding: "8px 12px" }}
-                            value={editStockVal}
-                            onChange={e => setEditStockVal(e.target.value)}
-                            placeholder="Cant."
-                          />
-                          <button className="btn btn-primary" onClick={() => guardarStock(p)} style={{ padding: "8px 12px" }}>
-                            {savingStock ? "..." : "✓"}
-                          </button>
-                          <button className="btn btn-ghost" onClick={() => setEditStockId(null)} style={{ padding: "8px 12px" }}>✕</button>
-                        </div>
-                      ) : (
-                        <button className="btn btn-ghost" onClick={() => setEditStockId(p.id)} style={{ fontSize: 12 }}>
-                          ⚡ Editar Stock
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                      </td>
+                      <td style={{ fontWeight: 800, color: t.accent, fontFamily: "JetBrains Mono" }}>${p.sale_price.toLocaleString()}</td>
+                    </tr>
+                    
+                    {/* Fila expandida de menú contextual */}
+                    {isSelected && (
+                      <tr style={{ background: t.accentBg }}>
+                        <td colSpan={5} style={{ padding: "12px 24px" }}>
+                          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                            <button className="btn btn-primary" style={{ padding: "8px 16px" }} onClick={() => setAddStockProdId(p.id)}>
+                              ➕ Añadir stock
+                            </button>
+                            <button className="btn btn-ghost" style={{ padding: "8px 16px", background: "white", color: t.accent }} onClick={() => onEdit(p)}>
+                              ✏️ Editar producto
+                            </button>
+                            <button className="btn btn-ghost" style={{ padding: "8px 16px", background: "white", color: t.text }} onClick={() => setChangeProvId(p.id)}>
+                              🔄 Cambiar proveedor
+                            </button>
+                            <div style={{ flex: 1 }} />
+                            <button className="btn btn-ghost" style={{ padding: "8px 16px", color: t.warn, border: `1px solid ${t.warn}` }} onClick={() => setConfirmEmptyId(p.id)}>
+                              🧹 Vaciar stock
+                            </button>
+                            <button className="btn btn-ghost" style={{ padding: "8px 16px", color: t.red, border: `1px solid ${t.red}` }} onClick={() => setConfirmDeleteId(p.id)}>
+                              🗑️ Eliminar
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </tbody>
           </table>
         </div>
       </div>
-    </div>
+      </div>
+
+      {/* Modales utilizando Portal para evitar problemas con position: fixed */}
+      {addStockProdId && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: t.bg2, padding: 24, borderRadius: 16, width: 320, border: `1px solid ${t.border}` }}>
+            <h3 style={{ margin: "0 0 16px 0", fontSize: 18 }}>Añadir Stock Rápidamente</h3>
+            <input 
+              type="number" 
+              className="search-input" 
+              placeholder="Cantidad a añadir..." 
+              value={addStockVal} 
+              onChange={e => setAddStockVal(e.target.value)} 
+              style={{ width: "100%", padding: 12, marginBottom: 16 }}
+            />
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="btn btn-ghost" onClick={() => setAddStockProdId(null)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={() => guardarStock(addStockProdId)} disabled={savingStock}>
+                {savingStock ? "Guardando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
+
+      {changeProvId && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: t.bg2, padding: 24, borderRadius: 16, width: 360, border: `1px solid ${t.border}` }}>
+            <h3 style={{ margin: "0 0 16px 0", fontSize: 18 }}>Cambiar Proveedor</h3>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: t.textSub, marginBottom: 4, display: "block" }}>Seleccionar existente</label>
+              <select className="search-input" style={{ width: "100%", padding: 10 }} value={selectedProvId} onChange={e => { setSelectedProvId(e.target.value); setNewProvName(""); }}>
+                <option value="">-- Ninguno --</option>
+                {providers.map(prov => <option key={prov.id} value={prov.id}>{prov.name}</option>)}
+              </select>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: t.textSub, marginBottom: 4, display: "block" }}>O crear uno nuevo</label>
+              <input 
+                className="search-input" 
+                placeholder="Nombre del nuevo proveedor..." 
+                value={newProvName} 
+                onChange={e => { setNewProvName(e.target.value); setSelectedProvId(""); }} 
+                style={{ width: "100%", padding: 10 }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="btn btn-ghost" onClick={() => setChangeProvId(null)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={() => doChangeProvider(changeProvId)}>Guardar</button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
+
+      {confirmEmptyId && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: t.bg2, padding: 24, borderRadius: 16, width: 320, border: `1px solid ${t.border}` }}>
+            <h3 style={{ margin: "0 0 16px 0", fontSize: 18, color: t.warn }}>¿Vaciar el stock?</h3>
+            <p style={{ fontSize: 13, marginBottom: 16 }}>Esta acción establecerá el stock a 0. Se requiere doble confirmación.</p>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="btn btn-ghost" onClick={() => setConfirmEmptyId(null)}>Cancelar</button>
+              <button className="btn btn-primary" style={{ background: t.warn, color: "white" }} onClick={() => doEmpty(confirmEmptyId)}>
+                Sí, vaciar stock (Confirmar)
+              </button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
+
+      {confirmDeleteId && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: t.bg2, padding: 24, borderRadius: 16, width: 320, border: `1px solid ${t.border}` }}>
+            <h3 style={{ margin: "0 0 16px 0", fontSize: 18, color: t.red }}>¿Eliminar producto?</h3>
+            <p style={{ fontSize: 13, marginBottom: 16 }}>Esta acción eliminará el producto del inventario de forma permanente.</p>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="btn btn-ghost" onClick={() => setConfirmDeleteId(null)}>Cancelar</button>
+              <button className="btn btn-primary" style={{ background: t.red, color: "white" }} onClick={() => doDelete(confirmDeleteId)}>
+                Sí, eliminar (Confirmar)
+              </button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
+    </>
   );
 }

@@ -1,12 +1,13 @@
-# backend/app/main.py
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.database import engine, Base
 from app.models.user import User, Company
-from app.models.inventory import Product, Inventory, InventoryMovement
-from app.routers import auth, inventory, alerts, chat, forecast, routes, excel
+from app.routers import auth, inventory, alerts, chat, forecast, routes, excel, provider
 
+os.makedirs("uploads", exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,6 +23,8 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan
 )
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
@@ -47,6 +50,7 @@ app.include_router(chat.router,      prefix="/api/v1")
 app.include_router(forecast.router,  prefix="/api/v1")  # ← Forecast IA
 app.include_router(routes.router,    prefix="/api/v1")  # ← Rutas
 app.include_router(excel.router,     prefix="/api/v1")  # ← Excel Integrador
+app.include_router(provider.router,  prefix="/api/v1")
 
 
 @app.get("/")

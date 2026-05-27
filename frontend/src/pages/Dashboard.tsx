@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import {
-  getProducts, getAlerts, createProduct, updateProduct, deleteProduct,
-  type Product, type UserProfile, type Alert,
+  getProducts, getAlerts, createProduct, updateProduct, deleteProduct, uploadImage,
+  getProviders,
+  type Product, type UserProfile, type Alert, type Provider,
 } from "../api/client";
 import ChatPanel from "../components/ChatPanel";
 import MovementsView from "../components/MovementsView";
@@ -12,6 +13,7 @@ import InventarioView from "../components/InventarioView";
 import RutasView from "../components/RutasView";
 import AlertsView from "../components/AlertsView";
 import IntegrationsView from "../components/IntegrationsView";
+import ProveedoresView from "../components/ProveedoresView";
 
 const I = {
   box: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>,
@@ -43,6 +45,7 @@ const I = {
 const NAV = [
   { id: "dashboard", Icon: I.grid, label: "Dashboard" },
   { id: "inventario", Icon: I.box, label: "Inventario" },
+  { id: "proveedores", Icon: I.database, label: "Proveedores" },
   { id: "movimientos", Icon: I.move, label: "Movimientos" },
   { id: "forecast", Icon: I.chart, label: "Forecast IA" },
   { id: "rutas", Icon: I.map, label: "Rutas" },
@@ -68,6 +71,7 @@ function ProductModal({ mode, product, t, onClose, onSave, onDelete }: {
   const [saving, setSaving] = useState(false);
   const [deling, setDeling] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
   const set = (k: keyof FD, v: any) => setF(p => ({ ...p, [k]: v }));
   const s14 = { width: 14, height: 14, display: "block" as const };
   const inp = { width: "100%", padding: "9px 12px", border: `1.5px solid ${t.border}`, borderRadius: 9, fontSize: 13, color: t.text, background: t.bg, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" as const };
@@ -117,8 +121,23 @@ function ProductModal({ mode, product, t, onClose, onSave, onDelete }: {
             </div>
           )}
           <div>
-            <label style={{ fontSize: 10, fontWeight: 700, color: t.textSub, textTransform: "uppercase" as const, letterSpacing: ".06em", display: "block", marginBottom: 5 }}>URL de imagen (opcional)</label>
-            <input style={{ ...inp, fontFamily: "'DM Sans',sans-serif" }} value={f.image_url} onChange={e => set("image_url", e.target.value)} placeholder="https://ejemplo.com/imagen.jpg" />
+            <label style={{ fontSize: 10, fontWeight: 700, color: t.textSub, textTransform: "uppercase" as const, letterSpacing: ".06em", display: "block", marginBottom: 5 }}>Imagen del producto (opcional)</label>
+            <input type="file" accept="image/*" style={{ ...inp, fontFamily: "'DM Sans',sans-serif", padding: "6px 12px" }} 
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploadingImg(true);
+                try {
+                  const res = await uploadImage(file);
+                  set("image_url", res.url);
+                } catch (err: any) {
+                  alert("Error subiendo imagen: " + err.message);
+                } finally {
+                  setUploadingImg(false);
+                }
+              }} 
+            />
+            {uploadingImg && <div style={{ fontSize: 11, color: t.accent, marginTop: 4 }}>Subiendo imagen...</div>}
             {f.image_url && <img src={f.image_url} alt="preview" onError={e => { (e.target as any).style.display = "none" }} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, marginTop: 6, border: `1px solid ${t.border}` }} />}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: t.bg3, borderRadius: 10 }}>
@@ -133,7 +152,7 @@ function ProductModal({ mode, product, t, onClose, onSave, onDelete }: {
           {mode === "edit" && confirm && <button onClick={del} disabled={deling} style={{ padding: "8px 14px", background: t.red, color: "white", border: "none", borderRadius: 9, fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer" }}>{deling ? "Eliminando..." : "Confirmar eliminacion?"}</button>}
           <div style={{ flex: 1 }} />
           <button onClick={onClose} style={{ padding: "8px 16px", background: "none", border: `1px solid ${t.border}`, borderRadius: 9, fontSize: 13, fontWeight: 600, color: t.textSub, fontFamily: "'DM Sans',sans-serif", cursor: "pointer" }}>Cancelar</button>
-          <button onClick={save} disabled={saving} style={{ padding: "8px 22px", background: t.accent, color: "white", border: "none", borderRadius: 9, fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", opacity: saving ? 0.7 : 1 }}>{saving ? "Guardando..." : mode === "create" ? "Crear producto" : "Guardar cambios"}</button>
+          <button onClick={save} disabled={saving || uploadingImg} style={{ padding: "8px 22px", background: t.accent, color: "white", border: "none", borderRadius: 9, fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", opacity: (saving || uploadingImg) ? 0.7 : 1 }}>{saving ? "Guardando..." : mode === "create" ? "Crear producto" : "Guardar cambios"}</button>
         </div>
       </div>
     </div>
@@ -144,6 +163,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
   const [nav, setNav] = useState("dashboard");
   const [products, setProducts] = useState<Product[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -182,8 +202,8 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
           }).catch(() => { });
         }
       }
-      const [p, a] = await Promise.all([getProducts(), getAlerts()]);
-      setProducts(p); setAlerts(a);
+      const [p, a, provs] = await Promise.all([getProducts(), getAlerts(), getProviders()]);
+      setProducts(p); setAlerts(a); setProviders(provs);
     }
     catch (e: any) { setErr(e.message || "Error cargando datos"); }
     finally { setLoading(false); }
@@ -239,6 +259,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
   const NAV_META: Record<string, { label: string; title: string }> = {
     dashboard: { label: "Panel de control", title: "Dashboard" },
     inventario: { label: "Gestion de stock", title: "Inventario" },
+    proveedores: { label: "Gestión de proveedores", title: "Proveedores" },
     movimientos: { label: "Entradas y salidas", title: "Movimientos" },
     forecast: { label: "Inteligencia Artificial", title: "Forecast IA" },
     rutas: { label: "Logistica", title: "Rutas" },
@@ -458,7 +479,8 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
           )}
 
           {nav === "movimientos" && <MovementsView t={t} dark={dark} productos={products} />}
-          {nav === "inventario" && <InventarioView t={t} dark={dark} productos={products} onUpdate={load} onCrear={() => setCreateOpen(true)} />}
+          {nav === "inventario" && <InventarioView t={t} dark={dark} productos={products} providers={providers} onUpdate={load} onCrear={() => setCreateOpen(true)} onEdit={(p) => setEditProd(p)} />}
+          {nav === "proveedores" && <ProveedoresView t={t} productos={products} providers={providers} onUpdate={load} />}
 
           {nav === "dashboard" && (
             <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: 32 }}>

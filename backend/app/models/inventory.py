@@ -37,6 +37,7 @@ class Product(Base):
     description   = Column(Text,        nullable=True)
     category      = Column(String(100), nullable=True, index=True)
     unit          = Column(String(30),  default="unidad")
+    provider_id   = Column(String(36), ForeignKey("providers.id", ondelete="SET NULL"), nullable=True)
 
     cost_price = Column(Float, default=0.0)
     sale_price = Column(Float, default=0.0)
@@ -52,6 +53,7 @@ class Product(Base):
     company   = relationship("Company",           back_populates="products")
     inventory = relationship("Inventory",         back_populates="product", uselist=False)
     movements = relationship("InventoryMovement", back_populates="product")
+    provider  = relationship("Provider",          back_populates="products")
 
     def __repr__(self):
         return f"<Product {self.sku} - {self.name}>"
@@ -106,3 +108,18 @@ class InventoryMovement(Base):
 
     def __repr__(self):
         return f"<Movement {self.type} qty={self.quantity} product_id={self.product_id}>"
+
+class Provider(Base):
+    __tablename__ = "providers"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    company_id = Column(String(36), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    name = Column(String(200), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    company = relationship("Company", back_populates="providers")
+    products = relationship("Product", back_populates="provider")
+
+    def __repr__(self):
+        return f"<Provider {self.name}>"
