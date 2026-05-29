@@ -169,7 +169,6 @@ code, pre {
 }
 .btn-primary:hover {
   background-color: var(--brand-primary-hover);
-  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
@@ -814,4 +813,12 @@ code, pre {
   [style*="grid-template-columns: 1fr 1fr"] {
     grid-template-columns: 1fr !important;
   }
+}
+
+.btn-provider-list {
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.btn-provider-list:hover {
+  background: var(--bg-hover) !important;
+  border-color: var(--brand-primary-border) !important;
 }

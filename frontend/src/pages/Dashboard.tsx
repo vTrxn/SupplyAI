@@ -498,7 +498,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
                     </p>
                   </div>
                   <div>
-                    <button className="btn" onClick={() => { setChatMsg("Genera un resumen ejecutivo de mi operación y revisa alertas."); setChatOpen(true); }} style={{ background: "white", color: t.accent, padding: "14px 28px", borderRadius: 12, fontWeight: 800, fontSize: "1rem", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", transition: "transform 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+                    <button className="btn" onClick={() => { setChatMsg("Genera un resumen ejecutivo de mi operación y revisa alertas."); setChatOpen(true); }} style={{ background: "white", color: t.accent, padding: "14px 28px", borderRadius: 12, fontWeight: 800, fontSize: "1rem", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
                       <span style={szM}><I.bot /></span> Resumen IA Rápido
                     </button>
                   </div>
