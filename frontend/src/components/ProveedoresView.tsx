@@ -250,7 +250,7 @@ export default function ProveedoresView({ t, productos, providers, onUpdate }: P
     <>
       <div className="animate-fade" style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 24, height: "calc(100vh - 320px)", minHeight: 400, overflow: "hidden" }}>
       {/* Sidebar de proveedores */}
-      <div id="tour-proveedores-card" className="card" style={{ display: "flex", flexDirection: "column", padding: 20, overflowY: "auto", border: `1px solid ${t.border}` }}>
+      <div id="tour-proveedores-card" className="card mobile-flat" style={{ display: "flex", flexDirection: "column", padding: 20, overflowY: "auto", border: `1px solid ${t.border}` }}>
         <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Proveedores</h3>
         
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
@@ -308,7 +308,7 @@ export default function ProveedoresView({ t, productos, providers, onUpdate }: P
       </div>
 
       {/* Catálogo del proveedor */}
-      <div className="card" style={{ display: "flex", flexDirection: "column", padding: 24, overflow: "hidden", position: "relative" }} onClick={() => setContextMenu(null)}>
+      <div className="card mobile-flat" style={{ display: "flex", flexDirection: "column", padding: 24, overflow: "hidden", position: "relative" }} onClick={() => setContextMenu(null)}>
         {selectedProvider ? (
           <>
             <div style={{ marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>

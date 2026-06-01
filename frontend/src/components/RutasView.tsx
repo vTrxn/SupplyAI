@@ -161,7 +161,7 @@ export default function RutasView({ t, dark = true }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, height: "100%" }}>
       {/* Segmented Control */}
-      <div style={{ display: "flex" }}>
+      <div className="desktop-only" style={{ display: "flex" }}>
         <div style={{ display: "inline-flex", background: t.bg2, padding: 6, borderRadius: 12, border: `1px solid ${t.border}`, gap: 4 }}>
           {(["entrega", "reabastecimiento"] as const).map(tp => (
             <button 
@@ -188,7 +188,7 @@ export default function RutasView({ t, dark = true }: Props) {
 
       {/* ── ENTREGAS ── */}
       {tipo === "entrega" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, height: "calc(100vh - 340px)", overflow: "hidden" }}>
+        <div className="rutas-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, height: "calc(100vh - 340px)", overflow: "hidden" }}>
           {/* Panel Lateral Izquierdo: Formulario */}
           <div className="ascroll" style={{ display: "flex", flexDirection: "column", gap: 20, overflowY: "auto", paddingRight: 8 }}>
             {/* Punto de Partida */}
@@ -368,7 +368,7 @@ export default function RutasView({ t, dark = true }: Props) {
       {tipo === "reabastecimiento" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {/* Header con stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+          <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
             {[
               { label: "Total pedidos", val: pedidos.length, color: t.accent },
               { label: "En tránsito", val: pedidos.filter(p => p.estado === "en_transito").length, color: t.warn },

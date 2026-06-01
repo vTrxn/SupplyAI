@@ -109,7 +109,7 @@ code, pre {
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes slideIn {
@@ -478,9 +478,31 @@ code, pre {
   border-bottom-right-radius: var(--radius-md);
 }
 
-.custom-table tr:hover td {
-  background: var(--bg-hover);
-  border-color: var(--brand-primary-border);
+@media (hover: hover) {
+  .custom-table tr:hover td {
+    background: var(--bg-hover);
+    border-color: var(--brand-primary-border);
+  }
+}
+
+.selected-row td {
+  border-top: 2px solid var(--brand-primary) !important;
+  border-bottom: 2px solid var(--brand-primary) !important;
+}
+.selected-row td:first-child {
+  border-left: 2px solid var(--brand-primary) !important;
+}
+.selected-row td:last-child {
+  border-right: 2px solid var(--brand-primary) !important;
+}
+
+@media (max-width: 768px) {
+  .custom-table tr.selected-row td:nth-child(2) {
+    border-left: 2px solid var(--brand-primary) !important;
+  }
+  .custom-table tr.selected-row td:first-child {
+    border-left: none !important;
+  }
 }
 
 .stock-badge {
@@ -696,6 +718,12 @@ code, pre {
   background: var(--success);
 }
 
+body.modal-open .fab-button {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.8) !important;
+}
+
 .toggle-handle {
   position: absolute;
   top: 3px;
@@ -743,15 +771,82 @@ code, pre {
   backdrop-filter: blur(4px);
 }
 
+.mobile-only, .mobile-flex-only {
+  display: none !important;
+}
+
 @media (max-width: 1024px) {
   .desktop-only {
     display: none !important;
   }
+  .mobile-only {
+    display: block !important;
+  }
+  .mobile-flex-only {
+    display: flex !important;
+  }
+
+  .mobile-flat {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+
+  .mobile-border-bottom {
+    border-bottom: 1px solid var(--border) !important;
+    padding-bottom: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .mobile-edge-to-edge {
+    margin-left: -16px;
+    margin-right: -16px;
+    border-radius: 0 !important;
+  }
+
+  .product-col-mobile {
+    padding-left: 28px !important;
+  }
+
+  .search-wrapper-mobile-full {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .mobile-filter-btn {
+    flex: 1 !important;
+    height: 42px !important;
+    border-radius: 21px !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: auto !important;
+  }
+
+  .table-container {
+    padding: 0 12px !important;
+  }
+
+  .custom-table tr td {
+    padding: 12px 10px !important;
+  }
+  
+  .custom-table tr td:nth-child(2) {
+    border-left: 1px solid var(--border) !important;
+    border-top-left-radius: var(--radius-md) !important;
+    border-bottom-left-radius: var(--radius-md) !important;
+  }
 
   .sidebar {
     position: fixed;
+    top: 0 !important;
+    left: 0 !important;
     transform: translateX(-100%);
     z-index: 100;
+    overflow-y: auto;
+    height: 100dvh !important;
   }
   
   .sidebar.mobile-open {
@@ -775,11 +870,21 @@ code, pre {
   }
 
   /* Inline grids to 1 column in dashboard */
-  .main-content > div > [style*="grid-template-columns: 2fr 1fr"] {
+  .dashboard-grid {
     grid-template-columns: 1fr !important;
   }
   [style*="grid-template-columns: 1fr 1fr 1fr"] {
     grid-template-columns: 1fr !important;
+  }
+  
+  .rutas-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
@@ -804,6 +909,14 @@ code, pre {
     width: 100%;
   }
 
+  .hero-banner {
+    padding: 24px !important;
+  }
+  
+  .hero-title {
+    font-size: 1.5rem !important;
+  }
+
   .span {
     width: 90% !important;
     padding: 24px !important;
@@ -812,6 +925,14 @@ code, pre {
   /* Form inner grids */
   [style*="grid-template-columns: 1fr 1fr"] {
     grid-template-columns: 1fr !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .mobile-text-sm {
+    font-size: 0.8rem !important;
   }
 }
 

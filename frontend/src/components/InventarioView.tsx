@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { type Product, type Provider, createMovement, updateProduct, deleteProduct, createProvider } from "../api/client";
+import { type Product, type Provider, createMovement, deleteMovement, updateProduct, deleteProduct, createProvider } from "../api/client";
 
 interface Props {
   t: any;
@@ -10,6 +10,7 @@ interface Props {
   onUpdate: () => void;
   onCrear: () => void;
   onEdit: (p: Product) => void;
+  hideFab?: boolean;
 }
 
 type SortKey = "name" | "current_stock" | "sale_price" | "category";
@@ -22,17 +23,73 @@ const SearchIcon = () => (
   </svg>
 );
 
-export default function InventarioView({ t, productos, providers, onUpdate, onCrear, onEdit }: Props) {
+
+function SwipeableToast({ toast, onClose, t }: any) {
+  const [x, setX] = React.useState(0);
+  const [startX, setStartX] = React.useState(0);
+  
+  React.useEffect(() => {
+    const timer = setTimeout(onClose, 5000);
+    return () => clearTimeout(timer);
+  }, [toast.id]);
+
+  return (
+    <div 
+      className="animate-slide"
+      onTouchStart={e => setStartX(e.touches[0].clientX)}
+      onTouchMove={e => {
+        const delta = e.touches[0].clientX - startX;
+        if (delta > 0) setX(delta);
+      }}
+      onTouchEnd={() => {
+        if (x > 80) onClose(); else setX(0);
+      }}
+      style={{
+        position: "fixed", bottom: 24, left: 24, right: 24, zIndex: 1000,
+        background: t.bg2, border: `1px solid ${t.border}`,
+        borderLeft: `5px solid ${toast.type === "error" ? t.red : toast.type === "success" ? t.green : t.accent}`,
+        borderRadius: 8, padding: "16px 20px", boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+        display: "flex", alignItems: "center", gap: 16,
+        transform: `translateX(${x}px)`, transition: x === 0 ? "transform 0.3s" : "none"
+      }}
+    >
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: toast.type === "error" ? t.red : t.text, marginBottom: 4 }}>
+          {toast.type === "error" ? "Error" : toast.type === "success" ? "Operación Exitosa" : "Información"}
+        </div>
+        <div style={{ fontSize: 12, color: t.textSub, lineHeight: 1.4 }}>{toast.message}</div>
+      </div>
+      {toast.onUndo && (
+        <button onClick={() => { toast.onUndo(); onClose(); }} style={{ background: "transparent", border: `1px solid ${t.border}`, borderRadius: 6, padding: "6px 12px", color: t.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Deshacer</button>
+      )}
+      <button onClick={onClose} style={{ background: "none", border: "none", color: t.textSub, cursor: "pointer", fontSize: 20 }}>&times;</button>
+    </div>
+  );
+}
+
+export default function InventarioView({ t, productos, providers, onUpdate, onCrear, onEdit, hideFab }: Props) {
   const [search,    setSearch]    = useState("");
   const [filtro,    setFiltro]    = useState<Filtro>("todos");
   const [sortKey,   setSortKey]   = useState<SortKey>("name");
   const [sortDir,   setSortDir]   = useState<SortDir>("asc");
   const [catFiltro, setCatFiltro] = useState("todas");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, productId: string } | null>(null);
 
   const [addStockProdId, setAddStockProdId] = useState<string | null>(null);
-  const [addStockVal, setAddStockVal] = useState("");
+    const [addStockVal, setAddStockVal] = useState("");
+  const [showSalidaModal, setShowSalidaModal] = useState(false);
+
+  const [showMobileAddMenu, setShowMobileAddMenu] = useState(false);
+  const [showMobileIngresoModal, setShowMobileIngresoModal] = useState(false);
+  const [mobileIngresoProdId, setMobileIngresoProdId] = useState("");
+  const [mobileIngresoVal, setMobileIngresoVal] = useState("");
+  const [mobileIngresoSearch, setMobileIngresoSearch] = useState("");
+
+  const [salidaValues, setSalidaValues] = useState<Record<string, string>>({});
+  const [salidaSaving, setSalidaSaving] = useState(false);
+
   const [savingStock, setSavingStock] = useState(false);
 
   const [confirmEmptyId, setConfirmEmptyId] = useState<string | null>(null);
@@ -41,6 +98,8 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
   const [changeProvId, setChangeProvId] = useState<string | null>(null);
   const [newProvName, setNewProvName] = useState("");
   const [selectedProvId, setSelectedProvId] = useState("");
+
+  const [qrProductId, setQrProductId] = useState<string | null>(null);
 
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -53,20 +112,14 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
   const [contactFormPhone, setContactFormPhone] = useState("");
   const [contactFormEmail, setContactFormEmail] = useState("");
   const [contactFormMessage, setContactFormMessage] = useState("");
-  const [toast, setToast] = useState<{ message: string; type: "error" | "info" | "success" } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "error" | "info" | "success", onUndo?: () => void, id: number } | null>(null);
 
   const DEFAULT_MSG = "Hola, me gustaría hacer un nuevo pedido de sus productos.";
 
-  function showToast(message: string, type: "error" | "info" | "success" = "error") {
-    setToast({ message, type });
+  function showToast(message: string, type: "error" | "info" | "success" = "error", onUndo?: () => void) {
+    setToast({ message, type, onUndo, id: Date.now() });
   }
 
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
 
   useEffect(() => {
     const closeMenus = () => {
@@ -141,12 +194,12 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
     else { setSortKey(key); setSortDir("asc"); }
   }
 
-  async function guardarStock(prodId: string) {
-    const qty = parseFloat(addStockVal);
+  async function guardarStock(prodId: string, customQty?: string) {
+    const qty = parseFloat(customQty || addStockVal);
     if (isNaN(qty) || qty <= 0) return;
     setSavingStock(true);
     try {
-      await createMovement({
+      const res = await createMovement({
         product_id: prodId,
         type:       "entrada",
         quantity:   qty,
@@ -156,6 +209,9 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
       setAddStockProdId(null);
       setAddStockVal("");
       onUpdate();
+      showToast("Se agregó stock", "success", async () => {
+        try { await deleteMovement(res.id); onUpdate(); } catch(e: any) { alert("Error al deshacer: " + (e.message || "Desconocido")); }
+      });
     } catch(e) {}
     finally { setSavingStock(false); }
   }
@@ -165,16 +221,19 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
     if (!p) return;
     try {
       if (p.current_stock > 0) {
-        await createMovement({
+        const res = await createMovement({
           product_id: p.id,
           type: "salida",
           quantity: p.current_stock,
-          reason: "Vaciado manual de stock",
-          reference: null, unit_price: null, date: null
+          reason: "Ajuste a 0",
+          reference: null, unit_price: null, date: null,
         });
+        showToast("Stock vaciado", "success", async () => {
+          try { await deleteMovement(res.id); onUpdate(); } catch(e: any) { alert("Error al deshacer: " + (e.message || "Desconocido")); }
+        });
+        onUpdate();
       }
       setConfirmEmptyId(null);
-      onUpdate();
     } catch (e: any) { alert(e.message); }
   }
 
@@ -203,7 +262,54 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
     } catch (e: any) { alert(e.message); }
   }
 
+
+  function handleAbrirSalida() {
+    if (selectedProductIds.length === 0) {
+      showToast("Por favor, selecciona al menos un producto.", "error");
+      return;
+    }
+    setSalidaValues({});
+    setShowSalidaModal(true);
+  }
+
+  async function handleConfirmarSalida() {
+    setSalidaSaving(true);
+    try {
+      const movements: {id: string, movId: string, q: number}[] = [];
+      for (const id of selectedProductIds) {
+        const q = Number(salidaValues[id]);
+        if (q > 0) {
+          const res = await createMovement({
+            product_id: id, type: "salida", quantity: q, reason: "Salida manual", reference: null, unit_price: null, date: null,
+          });
+          movements.push({ id, movId: res.id, q });
+        }
+      }
+      setShowSalidaModal(false);
+      setSelectedProductIds([]);
+      onUpdate();
+
+      if (movements.length > 0) {
+        showToast(movements.length === 1 ? "Se vendio un producto" : `Se vendieron ${movements.length} productos`, "success", async () => {
+          try {
+            for (const mov of movements) {
+              await deleteMovement(mov.movId);
+            }
+            onUpdate();
+          } catch(e: any) {
+            alert("Error al deshacer: " + (e.message || "Desconocido"));
+          }
+        });
+      }
+    } catch(e) {
+      showToast("Error al registrar salidas", "error");
+    } finally {
+      setSalidaSaving(false);
+    }
+  }
+
   function handleHacerPedido() {
+
     if (selectedProductIds.length === 0) {
       showToast("Por favor, selecciona al menos un producto para realizar el pedido.", "error");
       return;
@@ -347,10 +453,10 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
     <>
       <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-      <div className="card" style={{ padding: "24px 32px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
+      <div className="card mobile-flat" style={{ padding: "24px 32px" }}>
+        <div className="mobile-border-bottom" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", flex: 1 }}>
-            <div id="tour-inventario-search" className="search-wrapper" style={{ minWidth: 260, flex: "1 1 auto", maxWidth: 350 }}>
+            <div id="tour-inventario-search" className="search-wrapper search-wrapper-mobile-full" style={{ minWidth: 260, flex: "1 1 auto", maxWidth: 350 }}>
               <span className="search-icon"><SearchIcon /></span>
               <input
                 className="search-input"
@@ -362,15 +468,24 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
             </div>
             
             <select 
-              className="search-input" 
-              style={{ width: "auto", padding: "10px 16px" }}
+              className="search-input mobile-filter-btn" 
+              style={{ width: "auto", padding: "0 16px", appearance: "none", textAlign: "center", textAlignLast: "center" }}
               value={catFiltro}
               onChange={e => setCatFiltro(e.target.value)}
             >
-              {categorias.map(c => <option key={c} value={c}>{c === "todas" ? "Todas las categorías" : c}</option>)}
+              {categorias.map(c => <option key={c} value={c}>{c === "todas" ? "Categorías" : c}</option>)}
             </select>
 
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <button 
+              className="btn mobile-flex-only mobile-filter-btn" 
+              style={{ padding: "0 16px", background: t.bg3, border: `1px solid ${t.border}`, color: t.textMain }}
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+              Filtros
+            </button>
+
+            <div className={showMobileFilters ? "" : "desktop-only"} style={{ display: "flex", gap: 6, flexWrap: "wrap", width: showMobileFilters ? "100%" : "auto", marginTop: showMobileFilters ? 8 : 0 }}>
               {FILTROS.map(f => (
                 <button
                   key={f.id}
@@ -392,31 +507,28 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 12, flexShrink: 0 }}>
+          <div className="desktop-only" style={{ display: "flex", gap: 12, flexShrink: 0 }}>
             {selectedProductIds.length > 0 ? (
               <button 
                 className="btn btn-primary" 
-                style={{ background: t.accent, color: "white", padding: "8px 16px", border: "none", borderRadius: 8, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}
+                style={{ background: t.accent, color: "white", padding: "8px 16px", border: "none", borderRadius: 20, fontWeight: 600, display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}
                 onClick={handleHacerPedido}
               >
-                Hacer Pedido ({selectedProductIds.length})
+                Salida ({selectedProductIds.length})
               </button>
             ) : (
-              <button className="btn btn-primary" onClick={onCrear} style={{ padding: "8px 16px" }}>
+              <button className="btn btn-primary desktop-only" onClick={onCrear} style={{ padding: "8px 16px" }}>
                 Nuevo Producto
               </button>
             )}
-            <button className="btn btn-ghost" onClick={() => {}} style={{ padding: "8px 16px" }}>
-              <span style={{ fontSize: 16 }}>📥</span> CSV
-            </button>
           </div>
         </div>
 
         <div className="table-container" style={{ minHeight: 300 }} onClick={() => setContextMenu(null)}>
-          <table className="custom-table" style={{ borderSpacing: "0 8px" }}>
+          <table className="custom-table">
             <thead>
               <tr>
-                <th id="tour-inventario-select-header" style={{ width: 48, paddingLeft: 24 }}>
+                <th id="tour-inventario-select-header" className="desktop-only" style={{ width: 48, paddingLeft: 24 }}>
                   <div 
                     onClick={(e) => {
                       e.stopPropagation();
@@ -452,8 +564,8 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
                   </div>
                 </th>
                 <th onClick={() => toggleSort("name")} style={{ cursor: "pointer" }}>Producto {sortKey === "name" && (sortDir === "asc" ? "↑" : "↓")}</th>
-                <th onClick={() => toggleSort("category")} style={{ cursor: "pointer" }}>Categoría {sortKey === "category" && (sortDir === "asc" ? "↑" : "↓")}</th>
-                <th>Proveedor</th>
+                <th className="desktop-only" onClick={() => toggleSort("category")} style={{ cursor: "pointer" }}>Categoría {sortKey === "category" && (sortDir === "asc" ? "↑" : "↓")}</th>
+                <th className="desktop-only">Proveedor</th>
                 <th onClick={() => toggleSort("current_stock")} style={{ cursor: "pointer" }}>Stock {sortKey === "current_stock" && (sortDir === "asc" ? "↑" : "↓")}</th>
                 <th onClick={() => toggleSort("sale_price")} style={{ cursor: "pointer" }}>Precio {sortKey === "sale_price" && (sortDir === "asc" ? "↑" : "↓")}</th>
               </tr>
@@ -469,6 +581,7 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
                 return (
                   <tr 
                     key={p.id}
+                    className={isSelectedForOrder ? "selected-row" : ""}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedProductIds(prev => 
@@ -487,6 +600,7 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
                     }}
                   >
                     <td 
+                      className="desktop-only"
                       style={{ width: 48, paddingLeft: 24 }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -512,7 +626,7 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
                         )}
                       </div>
                     </td>
-                    <td>
+                    <td className="product-col-mobile">
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         {p.image_url ? (
                           <img src={p.image_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover" }} />
@@ -520,26 +634,21 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
                           <div style={{ width: 40, height: 40, borderRadius: 8, background: t.bg3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>📦</div>
                         )}
                         <div>
-                          <div style={{ fontWeight: 800, color: isSelectedForOrder ? t.accent : t.text }}>{p.name}</div>
+                          <div style={{ fontWeight: 800, color: isSelectedForOrder ? t.accent : t.text, fontSize: 13 }}>{p.name}</div>
                           <div style={{ fontSize: 11, color: t.textSub, fontFamily: "JetBrains Mono" }}>{p.sku}</div>
                         </div>
                       </div>
                     </td>
-                    <td><span className="badge" style={{ background: t.bg3, color: t.textSub }}>{p.category || "General"}</span></td>
-                    <td><span style={{ fontSize: 13, color: t.textSub }}>{provName}</span></td>
+                    <td className="desktop-only"><span className="badge" style={{ background: t.bg3, color: t.textSub }}>{p.category || "General"}</span></td>
+                    <td className="desktop-only"><span style={{ fontSize: 13, color: t.textSub }}>{provName}</span></td>
                     <td>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        <span style={{ fontWeight: 800, color: stockColor, fontFamily: "JetBrains Mono", fontSize: 16 }}>{stock} {p.unit}</span>
-                        <div style={{ width: 100, height: 4, background: t.border, borderRadius: 2, overflow: "hidden" }}>
-                          <div style={{ 
-                            width: `${Math.min((stock / (p.max_stock || 100)) * 100, 100)}%`, 
-                            height: "100%", 
-                            background: stockColor 
-                          }} />
-                        </div>
+                        <span style={{ fontWeight: 800, color: stockColor, fontFamily: "JetBrains Mono", fontSize: 13 }}>
+                          {stock}/{p.max_stock || 100} <span style={{ fontSize: 10, color: t.textSub }}>{p.unit}</span>
+                        </span>
                       </div>
                     </td>
-                    <td style={{ fontWeight: 800, color: t.accent, fontFamily: "JetBrains Mono" }}>${p.sale_price.toLocaleString()}</td>
+                    <td style={{ fontWeight: 800, color: t.accent, fontFamily: "JetBrains Mono", fontSize: 13 }}>${p.sale_price.toLocaleString()}</td>
                   </tr>
                 );
               })}
@@ -631,7 +740,51 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
         </div>
       , document.body)}
 
-      {showOrderModal && createPortal(
+      {qrProductId && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setQrProductId(null)}>
+          <div style={{ background: t.bg2, padding: 32, borderRadius: 16, border: `1px solid ${t.border}`, display: "flex", flexDirection: "column", alignItems: "center" }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 16px 0", fontSize: 18, color: t.text }}>Código QR</h3>
+            <p style={{ fontSize: 13, color: t.textSub, marginBottom: 24, textAlign: "center" }}>Usa este código para registrar movimientos con el escáner.</p>
+            <div style={{ background: "white", padding: 16, borderRadius: 12 }}>
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrProductId}`} alt="QR Code" style={{ width: 250, height: 250 }} />
+            </div>
+            <button className="btn btn-ghost" style={{ marginTop: 24, width: "100%" }} onClick={() => setQrProductId(null)}>Cerrar</button>
+          </div>
+        </div>
+      , document.body)}
+
+      
+      {showSalidaModal && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
+          <div className="card" style={{ width: 500, maxWidth: "90vw", padding: 32, position: "relative", border: `1px solid ${t.border}`, background: t.bg, maxHeight: "90vh", overflowY: "auto" }}>
+            <button onClick={() => setShowSalidaModal(false)} style={{ position: "absolute", top: 16, right: 16, background: "transparent", border: "none", color: t.textSub, cursor: "pointer", fontSize: 20 }}>X</button>
+            <h2 style={{ margin: "0 0 24px 0", fontSize: 22, color: t.text }}>Registrar Salida</h2>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 32 }}>
+              {selectedProductIds.map(id => {
+                const p = productos.find(x => x.id === id);
+                if(!p) return null;
+                return (
+                  <div key={id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 12, border: `1px solid ${t.border}`, borderRadius: 12 }}>
+                    <div>
+                      <div style={{ fontWeight: 600, color: t.text, fontSize: 14 }}>{p.name}</div>
+                      <div style={{ color: t.textSub, fontSize: 12 }}>Stock actual: {p.current_stock}</div>
+                    </div>
+                    <input type="number" min="0" placeholder="Cant." style={{ width: 80, padding: 8, borderRadius: 8, border: `1px solid ${t.border}`, outline: "none", textAlign: "right", color: t.text, background: t.bg }} value={salidaValues[id] || ""} onChange={e => setSalidaValues({...salidaValues, [id]: e.target.value})} onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }} />
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowSalidaModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" style={{ flex: 2 }} onClick={handleConfirmarSalida} disabled={salidaSaving}>{salidaSaving ? "Registrando..." : "Registrar Salida"}</button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
+
+{showOrderModal && createPortal(
         <div style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
           <div className="card" style={{ width: 500, maxWidth: "90vw", padding: 32, position: "relative", border: `1px solid ${t.border}`, background: t.bg }}>
             <button 
@@ -814,6 +967,16 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
             className="btn btn-ghost" 
             style={{ textAlign: "left", padding: "8px 12px", borderRadius: 6, fontSize: 13, border: "none", background: "transparent", cursor: "pointer" }} 
             onClick={() => {
+              setQrProductId(contextMenu.productId);
+              setContextMenu(null);
+            }}
+          >
+            Ver Código QR
+          </button>
+          <button 
+            className="btn btn-ghost" 
+            style={{ textAlign: "left", padding: "8px 12px", borderRadius: 6, fontSize: 13, border: "none", background: "transparent", cursor: "pointer" }} 
+            onClick={() => {
               setChangeProvId(contextMenu.productId);
               setContextMenu(null);
             }}
@@ -844,51 +1007,182 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
         </div>
       , document.body)}
 
-      {toast && createPortal(
-        <div 
-          className="animate-slide"
-          style={{
-            position: "fixed",
-            bottom: 24,
-            right: 24,
-            zIndex: 1000,
-            background: t.bg2,
-            border: `1px solid ${t.border}`,
-            borderLeft: `5px solid ${toast.type === "error" ? t.red : toast.type === "success" ? t.green : t.accent}`,
-            borderRadius: 8,
-            padding: "16px 20px",
-            boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+      {toast && createPortal(<SwipeableToast toast={toast} onClose={() => setToast(null)} t={t} />, document.body)}
+
+      {createPortal(
+        <button 
+          className="btn btn-primary mobile-flex-only fab-button" 
+          style={{ 
+            position: "fixed", 
+            bottom: 24, 
+            right: 24, 
+            height: 64, 
+            minWidth: 64,
+            borderRadius: 32, 
+            padding: selectedProductIds.length > 0 ? "0 24px" : "0", 
+            justifyContent: "center", 
+            alignItems: "center", 
+            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+            zIndex: 70,
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             display: "flex",
-            alignItems: "flex-start",
-            gap: 12,
-            width: 320,
-            fontFamily: "inherit",
-            boxSizing: "border-box"
+            overflow: "hidden",
+            transform: (hideFab || !!addStockProdId || !!changeProvId || !!confirmEmptyId || !!confirmDeleteId || !!qrProductId || showOrderModal || showSalidaModal || !!contextMenu || showMobileAddMenu || showMobileIngresoModal) ? "scale(0) translateY(20px)" : "scale(1) translateY(0)",
+            opacity: (hideFab || !!addStockProdId || !!changeProvId || !!confirmEmptyId || !!confirmDeleteId || !!qrProductId || showOrderModal || showSalidaModal || !!contextMenu || showMobileAddMenu || showMobileIngresoModal) ? 0 : 1,
+            pointerEvents: (hideFab || !!addStockProdId || !!changeProvId || !!confirmEmptyId || !!confirmDeleteId || !!qrProductId || showOrderModal || showSalidaModal || !!contextMenu || showMobileAddMenu || showMobileIngresoModal) ? "none" : "auto"
           }}
+          onClick={selectedProductIds.length > 0 ? handleAbrirSalida : () => {
+          if (window.innerWidth <= 768) {
+            setShowMobileAddMenu(true);
+          } else {
+            onCrear();
+          }
+        }}
         >
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: toast.type === "error" ? t.red : t.text, marginBottom: 4 }}>
-              {toast.type === "error" ? "Error de SupplyAI" : toast.type === "success" ? "Operación Exitosa" : "Información"}
+          
+      {showMobileAddMenu && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center", backdropFilter: "blur(4px)" }} onTouchEnd={(e) => { e.preventDefault(); setShowMobileAddMenu(false); }} onClick={() => setShowMobileAddMenu(false)}>
+          <div style={{ background: t.bg, width: "100%", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, animation: "mIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)" }} onTouchEnd={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 20px 0", fontSize: 20, color: t.text }}>¿Qué deseas hacer?</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <button className="btn btn-primary" style={{ padding: 16, fontSize: 16 }} onClick={() => { setShowMobileAddMenu(false); setShowMobileIngresoModal(true); }}>
+                Ingreso de producto
+              </button>
+              <button className="btn btn-ghost" style={{ padding: 16, fontSize: 16, border: `1px solid ${t.border}` }} onClick={() => { setShowMobileAddMenu(false); onCrear(); }}>
+                Nuevo producto
+              </button>
             </div>
-            <div style={{ fontSize: 12, color: t.textSub, lineHeight: 1.4 }}>
-              {toast.message}
+            <button className="btn btn-ghost" style={{ width: "100%", marginTop: 24, color: t.textSub }} onClick={() => setShowMobileAddMenu(false)}>Cancelar</button>
+          </div>
+        </div>
+      , document.body)}
+
+      {showMobileIngresoModal && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }} onTouchEnd={(e) => { e.preventDefault(); setShowMobileIngresoModal(false); }} onClick={() => setShowMobileIngresoModal(false)}>
+          <div className="card" style={{ width: 400, maxWidth: "90vw", padding: 24, background: t.bg, border: `1px solid ${t.border}`, position: "relative" }} onTouchEnd={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowMobileIngresoModal(false)} style={{ position: "absolute", top: 16, right: 16, background: "transparent", border: "none", color: t.textSub, cursor: "pointer", fontSize: 20 }}>X</button>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: 20, color: t.text }}>Ingreso de Producto</h2>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
+              <div>
+                <label style={{ display: "block", marginBottom: 8, fontSize: 13, color: t.textSub, fontWeight: 600 }}>Producto</label>
+                {mobileIngresoProdId ? (
+                  <div style={{ padding: 12, border: `1px solid ${t.border}`, borderRadius: 8, background: t.bg2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                      <span style={{ fontWeight: 600, color: t.text, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
+                        {productos.find(p => p.id === mobileIngresoProdId)?.name}
+                      </span>
+                      <span style={{ fontSize: 12, color: t.textSub }}>
+                        SKU: {productos.find(p => p.id === mobileIngresoProdId)?.sku || "N/A"}
+                      </span>
+                    </div>
+                    <button 
+                      className="btn btn-ghost" 
+                      style={{ fontSize: 12, padding: "6px 10px" }} 
+                      onClick={() => setMobileIngresoProdId("")}
+                    >
+                      Cambiar
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <input 
+                      type="text" 
+                      className="search-input" 
+                      placeholder="Buscar por nombre o código..." 
+                      value={mobileIngresoSearch}
+                      onChange={e => setMobileIngresoSearch(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                      style={{ width: "100%", padding: 12, marginBottom: 8 }}
+                    />
+                    <div style={{ maxHeight: 160, overflowY: "auto", border: `1px solid ${t.border}`, borderRadius: 8, background: t.bg2 }}>
+                      {productos
+                        .filter(p => p.name.toLowerCase().includes(mobileIngresoSearch.toLowerCase()) || (p.sku && p.sku.toLowerCase().includes(mobileIngresoSearch.toLowerCase())))
+                        .slice(0, 20)
+                        .map(p => (
+                          <div 
+                            key={p.id} 
+                            onClick={() => { setMobileIngresoProdId(p.id); setMobileIngresoSearch(""); }}
+                            style={{ padding: "10px 12px", borderBottom: `1px solid ${t.border}`, cursor: "pointer", display: "flex", flexDirection: "column" }}
+                          >
+                            <span style={{ fontWeight: 600, color: t.text, fontSize: 14 }}>{p.name}</span>
+                            <span style={{ fontSize: 12, color: t.textSub }}>{p.sku || "Sin SKU"}</span>
+                          </div>
+                        ))}
+                      {productos.filter(p => p.name.toLowerCase().includes(mobileIngresoSearch.toLowerCase()) || (p.sku && p.sku.toLowerCase().includes(mobileIngresoSearch.toLowerCase()))).length === 0 && (
+                        <div style={{ padding: 12, textAlign: "center", color: t.textSub, fontSize: 13 }}>No se encontraron productos</div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: 8, fontSize: 13, color: t.textSub, fontWeight: 600 }}>Cantidad a ingresar</label>
+                <input 
+                  type="number" 
+                  className="search-input" 
+                  placeholder="Ej. 10" 
+                  value={mobileIngresoVal} 
+                  onChange={e => setMobileIngresoVal(e.target.value)} 
+                  onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                  style={{ width: "100%", padding: 12 }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowMobileIngresoModal(false)}>Cancelar</button>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 2 }} 
+                disabled={!mobileIngresoProdId || !mobileIngresoVal || savingStock}
+                onClick={async () => {
+                  await guardarStock(mobileIngresoProdId, mobileIngresoVal);
+                  setShowMobileIngresoModal(false);
+                  setMobileIngresoProdId("");
+                  setMobileIngresoVal("");
+                }}
+              >
+                {savingStock ? "Guardando..." : "Registrar Ingreso"}
+              </button>
             </div>
           </div>
-          <button 
-            onClick={() => setToast(null)}
-            style={{
-              background: "none",
-              border: "none",
-              color: t.textSub,
-              cursor: "pointer",
-              fontSize: 14,
-              padding: 0,
-              display: "flex"
-            }}
-          >
-            ✕
-          </button>
         </div>
+      , document.body)}
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {/* Plus Icon */}
+            <div style={{ 
+              maxWidth: selectedProductIds.length > 0 ? 0 : 32,
+              opacity: selectedProductIds.length > 0 ? 0 : 1,
+              transform: selectedProductIds.length > 0 ? "scale(0.5) rotate(-90deg)" : "scale(1) rotate(0deg)",
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </div>
+
+            {/* Pedido Text */}
+            <div style={{ 
+              maxWidth: selectedProductIds.length > 0 ? 200 : 0,
+              opacity: selectedProductIds.length > 0 ? 1 : 0,
+              transform: selectedProductIds.length > 0 ? "translateX(0)" : "translateX(10px)",
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              overflow: "hidden",
+              fontWeight: 800, 
+              fontSize: 16, 
+              color: "white",
+              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center"
+            }}>
+              Salida ({selectedProductIds.length})
+            </div>
+          </div>
+        </button>
       , document.body)}
     </>
   );

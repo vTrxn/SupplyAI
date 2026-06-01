@@ -326,3 +326,32 @@ async def historial_movimientos(
         .order_by(InventoryMovement.date.desc())
     )
     return result.scalars().all()
+
+@router.delete("/movements/{movement_id}", status_code=204)
+async def delete_movement(
+    movement_id: str,
+    db: AsyncSession = Depends(get_db),
+    token=Depends(get_token_data),
+):
+    result = await db.execute(select(InventoryMovement).where(InventoryMovement.id == movement_id))
+    mov = result.scalar_one_or_none()
+    if not mov:
+        raise HTTPException(status_code=404, detail="Movimiento no encontrado")
+
+    inv_res = await db.execute(
+        select(Inventory).where(
+            Inventory.product_id == mov.product_id,
+            Inventory.company_id == token.company_id
+        )
+    )
+    inv = inv_res.scalar_one_or_none()
+    
+    if inv:
+        if mov.type in (MovementType.ENTRADA, MovementType.AJUSTE):
+            inv.current_stock -= mov.quantity
+        elif mov.type == MovementType.SALIDA:
+            inv.current_stock += mov.quantity
+
+    await db.execute(delete(InventoryMovement).where(InventoryMovement.id == movement_id))
+    await db.commit()
+    return None

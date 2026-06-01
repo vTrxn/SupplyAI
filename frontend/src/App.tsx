@@ -21,7 +21,7 @@ export default function App() {
   }
 
   return (
-    <div key="dashboard" className="animate-fade">
+    <div key="dashboard">
       <Dashboard dark={dark} setDark={setDark} />
     </div>
   );

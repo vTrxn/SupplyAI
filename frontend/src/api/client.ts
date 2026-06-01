@@ -128,6 +128,7 @@ export const uploadImage = async (file: File) => {
 // ── Movimientos ────────────────────────────────────────────────────────────────
 export const getMovements = () => apiFetch<Movement[]>("/inventory/movements");
 export const createMovement = (data: MovementCreate) => apiFetch<Movement>("/inventory/movements", { method: "POST", body: JSON.stringify(data) });
+export const deleteMovement = (id: string) => apiFetch<void>(`/inventory/movements/${id}`, { method: "DELETE" });
 export const clearMovements = () => apiFetch<void>("/inventory/movements", { method: "DELETE" });
 
 // ── Alertas ────────────────────────────────────────────────────────────────────

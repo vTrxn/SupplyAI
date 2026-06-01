@@ -1,11 +1,11 @@
 #!/bin/bash
-echo "Iniciando SupplyAI..."
+echo "Iniciando Backend..."
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 cd "$SCRIPT_DIR/backend"
 source venv/bin/activate
-uvicorn app.main:app --reload --port 8000 &
+uvicorn app.main:app --host 0.0.0.0 --reload --port 8000 &
 BACKEND_PID=$!
 
 cd "$SCRIPT_DIR/frontend"

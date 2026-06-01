@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import {
   getProducts, getAlerts, createProduct, updateProduct, deleteProduct, uploadImage,
@@ -14,8 +15,12 @@ import RutasView from "../components/RutasView";
 import AlertsView from "../components/AlertsView";
 import IntegrationsView from "../components/IntegrationsView";
 import ProveedoresView from "../components/ProveedoresView";
+<<<<<<< Updated upstream
 import OnboardingTour from "../components/OnboardingTour";
 
+=======
+import HistorialView from "../components/HistorialView";
+>>>>>>> Stashed changes
 
 const I = {
   box: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>,
@@ -42,18 +47,20 @@ const I = {
   close: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
   edit: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>,
   trash: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg>,
+  scan: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7V4h3m10 0h3v3M4 17v3h3m10 0h3v-3M8 12h8"/></svg>,
 };
 
 const NAV = [
   { id: "dashboard", Icon: I.grid, label: "Dashboard" },
   { id: "inventario", Icon: I.box, label: "Inventario" },
-  { id: "proveedores", Icon: I.database, label: "Proveedores" },
-  { id: "movimientos", Icon: I.move, label: "Movimientos" },
-  { id: "forecast", Icon: I.chart, label: "Forecast IA" },
+  { id: "proveedores", Icon: I.database, label: "Proveedores", hideMobile: true },
+  { id: "movimientos", Icon: I.scan, label: "Escáner", mobileOnly: true },
+  { id: "historial", Icon: I.move, label: "Historial" },
+  { id: "forecast", Icon: I.chart, label: "Forecast IA", hideMobile: true },
   { id: "rutas", Icon: I.map, label: "Rutas" },
-  { id: "alertas", Icon: I.bell, label: "Alertas" },
-  { id: "asistente", Icon: I.bot, label: "Asistente IA" },
-  { id: "integraciones", Icon: I.database, label: "Integraciones" },
+  { id: "alertas", Icon: I.bell, label: "Alertas", hideMobile: true },
+  { id: "asistente", Icon: I.bot, label: "Asistente IA", hideMobile: true },
+  { id: "integraciones", Icon: I.database, label: "Integraciones", hideMobile: true },
 ];
 
 
@@ -78,10 +85,16 @@ function ProductModal({ mode, product, t, onClose, onSave, onDelete }: {
   const s14 = { width: 14, height: 14, display: "block" as const };
   const inp = { width: "100%", padding: "9px 12px", border: `1.5px solid ${t.border}`, borderRadius: 9, fontSize: 13, color: t.text, background: t.bg, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" as const };
   const lbl = { fontSize: 10, fontWeight: 700 as const, color: t.textSub, textTransform: "uppercase" as const, letterSpacing: ".06em", display: "block", marginBottom: 5 };
-  async function save() { if (!f.name.trim()) { alert("Nombre requerido"); return; } if (mode === "create" && !f.sku.trim()) { alert("ID requerido"); return; } setSaving(true); await onSave(f); setSaving(false); }
+  
+  useEffect(() => {
+    document.body.classList.add("modal-open");
+    return () => document.body.classList.remove("modal-open");
+  }, []);
+
+  async function save() { if (!f.name.trim()) { alert("Nombre requerido"); return; } setSaving(true); await onSave(f); setSaving(false); }
   async function del() { if (!onDelete) return; setDeling(true); await onDelete(); setDeling(false); }
-  return (
-    <div onClick={e => { if (e.target === e.currentTarget) onClose(); }} style={{ position: "fixed", inset: 0, zIndex: 80, background: "rgba(0,0,0,.55)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+  return createPortal(
+    <div onClick={e => { if (e.target === e.currentTarget) onClose(); }} style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(0,0,0,.55)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ background: t.bg2, border: `1px solid ${t.border}`, borderRadius: 18, width: "100%", maxWidth: 500, maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 24px 80px rgba(0,0,0,.4)", animation: "mIn .28s cubic-bezier(.34,1.4,.64,1)" }}>
         <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${t.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <div>
@@ -91,9 +104,8 @@ function ProductModal({ mode, product, t, onClose, onSave, onDelete }: {
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${t.border}`, background: "none", cursor: "pointer", color: t.textSub, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={s14}><I.close /></span></button>
         </div>
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14, overflowY: "auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
             <div><label style={lbl}>Nombre *</label><input style={inp} value={f.name} onChange={e => set("name", e.target.value)} placeholder="Ej: Arroz Diana 500g" /></div>
-            <div><label style={lbl}>ID *</label><input style={{ ...inp, fontFamily: "'DM Mono',monospace" }} value={f.sku} onChange={e => set("sku", e.target.value)} disabled={mode === "edit"} placeholder="Ej: PROD-001" /></div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div><label style={lbl}>Categoria</label><input style={inp} value={f.category} onChange={e => set("category", e.target.value)} placeholder="Ej: Alimentos" /></div>
@@ -157,11 +169,12 @@ function ProductModal({ mode, product, t, onClose, onSave, onDelete }: {
           <button onClick={save} disabled={saving || uploadingImg} style={{ padding: "8px 22px", background: t.accent, color: "white", border: "none", borderRadius: 9, fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", opacity: (saving || uploadingImg) ? 0.7 : 1 }}>{saving ? "Guardando..." : mode === "create" ? "Crear producto" : "Guardar cambios"}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
-export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (v: boolean) => void }) {
+export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: React.Dispatch<React.SetStateAction<boolean>> }) {
   const [nav, setNav] = useState("dashboard");
   const [products, setProducts] = useState<Product[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -184,6 +197,15 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
   );
 
   useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
+
+  useEffect(() => {
     if (!localStorage.getItem("token")) { window.location.href = "/"; return; }
     load();
 
@@ -194,7 +216,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
     }
   }, []);
 
-  const toggleDark = () => setDark(!dark);
+  const toggleDark = () => setDark(prev => !prev);
 
   const toggleOnboarding = () => {
     const nextVal = !onboardingEnabled;
@@ -236,7 +258,24 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
   }
 
   async function handleCreate(form: FD) {
-    try { await createProduct({ name: form.name, sku: form.sku, category: form.category || undefined, unit: form.unit, cost_price: +form.cost_price || 0, sale_price: +form.sale_price || 0, min_stock: +form.min_stock || 0, max_stock: +form.max_stock || 0, reorder_point: +form.reorder_point || 0, stock_inicial: +form.stock_inicial || 0, image_url: form.image_url || undefined } as any); setCreateOpen(false); await load(); }
+    try { 
+      let sku = form.sku;
+      if (!sku) {
+        let maxNum = parseInt(localStorage.getItem("global_max_sku_num") || "0");
+        if (maxNum === 0) {
+          maxNum = products.reduce((acc, p) => {
+            const m = p.sku.match(/(\d+)$/);
+            return m ? Math.max(acc, parseInt(m[1])) : acc;
+          }, 0);
+        }
+        maxNum++;
+        localStorage.setItem("global_max_sku_num", maxNum.toString());
+        sku = `PROD-${String(maxNum).padStart(3, '0')}`;
+      }
+      await createProduct({ name: form.name, sku, category: form.category || undefined, unit: form.unit, cost_price: +form.cost_price || 0, sale_price: +form.sale_price || 0, min_stock: +form.min_stock || 0, max_stock: +form.max_stock || 0, reorder_point: +form.reorder_point || 0, stock_inicial: +form.stock_inicial || 0, image_url: form.image_url || undefined } as any); 
+      setCreateOpen(false); 
+      await load(); 
+    }
     catch (e: any) { alert("Error al crear: " + e.message); }
   }
   async function handleSave(form: FD) {
@@ -286,7 +325,8 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
     dashboard: { label: "Panel de control", title: "Dashboard" },
     inventario: { label: "Gestion de stock", title: "Inventario" },
     proveedores: { label: "Gestión de proveedores", title: "Proveedores" },
-    movimientos: { label: "Entradas y salidas", title: "Movimientos" },
+    movimientos: { label: "Escáner QR", title: "Movimientos" },
+    historial: { label: "Historial de transacciones", title: "Historial" },
     forecast: { label: "Inteligencia Artificial", title: "Forecast IA" },
     rutas: { label: "Logistica", title: "Rutas" },
     alertas: { label: "Notificaciones", title: "Alertas" },
@@ -314,8 +354,11 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
           <div className="overlay animate-fade" onClick={() => setSettOpen(false)} />
           <div className="side-panel animate-slide">
             <div className="side-panel-header">
-              <h2 style={{ fontSize: 20, fontWeight: 800 }}>Configuración</h2>
-              <p style={{ color: t.textSub, fontSize: 13 }}>Personaliza tu experiencia de usuario</p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>Configuración</h2>
+                <button className="btn mobile-flex-only" onClick={() => setSettOpen(false)} style={{ padding: "6px 12px", background: t.bg3, border: `1px solid ${t.border}` }}>Volver</button>
+              </div>
+              <p style={{ color: t.textSub, fontSize: 13, margin: 0 }}>Personaliza tu experiencia de usuario</p>
             </div>
 
             <div className="side-panel-content">
@@ -357,6 +400,17 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
                   </div>
                 </div>
               </section>
+
+              <section className="settings-section">
+                <h3 className="section-title">Exportación de Datos</h3>
+                <div className="setting-row" style={{ cursor: "pointer" }} onClick={() => {}}>
+                  <div className="setting-info">
+                    <span className="setting-name">Descargar Inventario (CSV)</span>
+                    <span className="setting-desc">Exportar todo tu inventario en formato CSV</span>
+                  </div>
+                  <span style={{ fontSize: 20 }}>📥</span>
+                </div>
+              </section>
             </div>
 
             <div className="side-panel-footer">
@@ -372,17 +426,21 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
       {editProd && <ProductModal mode="edit" product={editProd} t={t} onClose={() => setEditProd(null)} onSave={handleSave} onDelete={handleDelete} />}
 
       <div className={`sidebar-overlay ${menuOpen ? "mobile-open" : ""}`} onClick={() => setMenuOpen(false)} />
+<<<<<<< Updated upstream
       <aside id="tour-sidebar" className={`sidebar ${menuOpen ? "mobile-open" : ""}`} style={{ position: "sticky", top: 0, zIndex: 110 }}>
+=======
+      <aside className={`sidebar ${menuOpen ? "mobile-open" : ""}`}>
+>>>>>>> Stashed changes
         <div className="sidebar-logo">
           <div className="logo-icon"><span style={szM}><I.box /></span></div>
           <div className="logo-text">Supply<span>AI</span></div>
         </div>
 
         <nav className="nav-list">
-          {NAV.map(({ id, Icon, label }) => (
+          {NAV.map(({ id, Icon, label, hideMobile, mobileOnly }) => (
             <button
               key={id}
-              className={`nav-item ${nav === id ? "active" : ""}`}
+              className={`nav-item ${nav === id ? "active" : ""} ${hideMobile ? 'desktop-only' : ''} ${mobileOnly ? 'mobile-flex-only' : ''}`}
               onClick={() => { setNav(id); setMenuOpen(false); }}
             >
               <span className="nav-icon"><Icon /></span>
@@ -430,7 +488,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
         <div className="mobile-header" style={{ background: "var(--glass-bg)", backdropFilter: "blur(20px)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 40 }}>
           <div className="sidebar-logo" style={{ marginBottom: 0, padding: 0 }}>
             <div className="logo-icon" style={{ width: 36, height: 36, boxShadow: "0 4px 10px var(--brand-primary-soft)" }}><span style={sz}><I.box /></span></div>
-            <div className="logo-text" style={{ fontSize: "1.2rem" }}>Supply<span>AI</span></div>
+            <div className="logo-text" style={{ fontSize: "1.2rem" }}>{curNav.title}</div>
           </div>
           <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>
             <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
@@ -438,15 +496,15 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
         </div>
 
         <main className="main-content">
-          <header className="topbar">
-            <div className="page-header">
+          <header className="topbar desktop-only">
+            <div className="page-header desktop-only">
               <p>{curNav.label}</p>
               <h1>{curNav.title}</h1>
             </div>
 
             <div id="tour-topbar-actions" className="topbar-actions">
               {(nav === "dashboard" || nav === "inventario") && (
-                <div className="search-wrapper">
+                <div className="search-wrapper desktop-only">
                   <span className="search-icon"><I.search /></span>
                   <input
                     className="search-input"
@@ -514,14 +572,14 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
           )}
 
           {nav === "movimientos" && <MovementsView t={t} dark={dark} productos={products} />}
-          {nav === "inventario" && <InventarioView t={t} dark={dark} productos={products} providers={providers} onUpdate={load} onCrear={() => setCreateOpen(true)} onEdit={(p) => setEditProd(p)} />}
+          {nav === "historial" && <HistorialView t={t} dark={dark} productos={products} />}
+          {nav === "inventario" && <InventarioView t={t} dark={dark} productos={products} providers={providers} onUpdate={load} onCrear={() => setCreateOpen(true)} onEdit={(p) => setEditProd(p)} hideFab={createOpen || !!editProd} />}
           {nav === "proveedores" && <ProveedoresView t={t} productos={products} providers={providers} onUpdate={load} />}
 
           {nav === "dashboard" && (
             <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-              
               {/* Premium Solid Hero Banner */}
-              <div style={{ padding: "36px 48px", borderRadius: 24, background: t.accent, color: "white", boxShadow: `0 12px 24px -8px ${t.accent}` }}>
+              <div id="tour-hero-banner" style={{ padding: "36px 48px", borderRadius: 24, background: t.accent, color: "white", boxShadow: `0 12px 24px -8px ${t.accent}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 24 }}>
                   <div>
                     <h2 style={{ fontSize: "2.2rem", fontWeight: 800, marginBottom: 8, letterSpacing: "-0.02em" }}>
@@ -540,13 +598,15 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
                 </div>
               </div>
 
+=======
+>>>>>>> Stashed changes
               {/* Redundant Metrics Grid Removed per user request */}
 
               {/* Data Layout Split */}
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24 }}>
+              <div className="dashboard-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24 }}>
                 
                 {/* Left: Inventory Highlight Table */}
-                <div id="tour-inventory-card" className="card" style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column", borderRadius: 24, border: `1px solid ${t.border}` }}>
+                <div id="tour-inventory-card" className="card mobile-flat" style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column", borderRadius: 24, border: `1px solid ${t.border}` }}>
                   <div style={{ padding: "28px 32px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: `linear-gradient(to right, transparent, ${t.bg3})` }}>
                     <div>
                       <h3 style={{ fontSize: 20, fontWeight: 800, color: t.text, display: "flex", alignItems: "center", gap: 10 }}>
@@ -565,7 +625,12 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
                     <table className="custom-table">
                       <thead style={{ position: "sticky", top: 0, background: t.bg2, zIndex: 10 }}>
                         <tr>
-                          {["Producto", "Categoría", "Inventario", "Precio", "Estado", ""].map(c => <th key={c} style={{ paddingTop: 20 }}>{c}</th>)}
+                          <th style={{ paddingTop: 20 }}>Producto</th>
+                          <th className="desktop-only" style={{ paddingTop: 20 }}>Categoría</th>
+                          <th style={{ paddingTop: 20 }}>Inventario</th>
+                          <th style={{ paddingTop: 20 }}>Precio</th>
+                          <th className="desktop-only" style={{ paddingTop: 20 }}>Estado</th>
+                          <th className="desktop-only" style={{ paddingTop: 20 }}></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -580,19 +645,19 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
                           return (
                             <tr key={p.id} onClick={() => setEditProd(p)} style={{ cursor: "pointer" }}>
                               <td>
-                                <div style={{ fontWeight: 800, color: t.text, fontSize: "0.95rem" }}>{p.name}</div>
+                                <div style={{ fontWeight: 800, color: t.text, fontSize: "0.95rem" }} className="mobile-text-sm">{p.name}</div>
                                 <div style={{ fontSize: "0.75rem", color: t.textSub, fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>{p.sku}</div>
                               </td>
-                              <td><span className="badge" style={{ background: t.bg3, color: t.textSub, borderRadius: 8, padding: "4px 10px" }}>{p.category || "General"}</span></td>
+                              <td className="desktop-only"><span className="badge" style={{ background: t.bg3, color: t.textSub, borderRadius: 8, padding: "4px 10px" }}>{p.category || "General"}</span></td>
                               <td>
-                                <span className="stock-badge" style={{ background: stock === 0 ? t.redBg : stockBajo ? t.warnBg : t.greenBg, color: stockColor, borderRadius: 8, padding: "6px 12px", border: `1px solid ${stock === 0 ? t.red : stockBajo ? t.warn : t.green}33` }}>
+                                <span className="stock-badge mobile-text-sm" style={{ background: stock === 0 ? t.redBg : stockBajo ? t.warnBg : t.greenBg, color: stockColor, borderRadius: 8, padding: "6px 12px", border: `1px solid ${stock === 0 ? t.red : stockBajo ? t.warn : t.green}33` }}>
                                   {stock.toLocaleString()} {p.unit}
                                 </span>
                               </td>
-                              <td style={{ fontWeight: 800, color: t.accent, fontFamily: "'JetBrains Mono', monospace" }}>
+                              <td style={{ fontWeight: 800, color: t.accent, fontFamily: "'JetBrains Mono', monospace" }} className="mobile-text-sm">
                                 ${p.sale_price.toLocaleString()}
                               </td>
-                              <td>
+                              <td className="desktop-only">
                                 {p.is_active ? (
                                   <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: t.green, fontSize: 13, fontWeight: 800, background: t.greenBg, padding: "4px 10px", borderRadius: 8 }}>
                                     <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.green, boxShadow: `0 0 8px ${t.green}` }} /> Activo
@@ -601,7 +666,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
                                   <span style={{ color: t.textSub, fontSize: 13, fontWeight: 600 }}>Inactivo</span>
                                 )}
                               </td>
-                              <td style={{ textAlign: "right", verticalAlign: "middle" }}><span style={{ color: t.accent, opacity: 0.7, padding: 8, background: t.accentBg, borderRadius: 8, display: "inline-flex" }}><I.edit /></span></td>
+                              <td className="desktop-only" style={{ textAlign: "right", verticalAlign: "middle" }}><span style={{ color: t.accent, opacity: 0.7, padding: 8, background: t.accentBg, borderRadius: 8, display: "inline-flex" }}><I.edit /></span></td>
                             </tr>
                           );
                         })}
@@ -611,8 +676,8 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
                 </div>
 
                 {/* Right: AI Alerts Panel */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                  <div id="tour-alerts-card" className="card" style={{ padding: 28, borderRadius: 24, border: `1px solid ${t.border}`, background: t.bg2 }}>
+                <div className="desktop-only" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                  <div id="tour-alerts-card" className="card mobile-flat mobile-border-bottom" style={{ padding: 28, borderRadius: 24, border: `1px solid ${t.border}`, background: t.bg2 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
                       <h3 style={{ fontSize: 18, fontWeight: 800, display: "flex", alignItems: "center", gap: 10 }}>
                         <span style={{ color: totalAl > 0 ? t.red : t.accent }}><I.bell /></span> Alertas Inteligentes

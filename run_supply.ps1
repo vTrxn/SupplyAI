@@ -1,13 +1,23 @@
 Write-Host "Iniciando SupplyAI en Windows..." -ForegroundColor Cyan
 
-$ScriptDir = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+$ScriptDir = $PSScriptRoot
+if (-not $ScriptDir) {
+    $ScriptDir = (Get-Location).Path
+}
 
 Write-Host "Iniciando Backend..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass", "-NoExit", "-Command", "cd '$ScriptDir\backend'; .\venv\Scripts\activate.ps1; uvicorn app.main:app --reload --port 8000" -WindowStyle Normal
+$BackendCmd = "cd /d `"$ScriptDir\backend`" && .\venv\Scripts\activate.bat && uvicorn app.main:app --host 0.0.0.0 --reload --port 8000"
+Start-Process cmd -ArgumentList "/k", $BackendCmd -WindowStyle Normal
 
 Write-Host "Iniciando Frontend..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass", "-NoExit", "-Command", "cd '$ScriptDir\frontend'; npm run dev" -WindowStyle Normal
+$FrontendCmd = "cd /d `"$ScriptDir\frontend`" && npm run dev -- --host"
+Start-Process cmd -ArgumentList "/k", $FrontendCmd -WindowStyle Normal
 
-Write-Host "Servidores en línea!" -ForegroundColor Green
-Write-Host "Frontend: http://localhost:5173" -ForegroundColor Green
-Write-Host "Backend: http://localhost:8000" -ForegroundColor Green
+Write-Host "Servidores en linea!" -ForegroundColor Green
+Write-Host "Frontend (Local): http://localhost:5173" -ForegroundColor Green
+Write-Host "Frontend (Red): http://192.168.0.9:5173" -ForegroundColor Green
+Write-Host "Backend: http://192.168.0.9:8000" -ForegroundColor Green
+Write-Host ""
+Write-Host "IMPORTANTE:" -ForegroundColor Red
+Write-Host "Si no te carga en el celular, es porque el Firewall de Windows esta bloqueando la conexion." -ForegroundColor Yellow
+Write-Host "Para solucionarlo, debes permitir las conexiones entrantes a los puertos 5173 y 8000." -ForegroundColor Yellow
