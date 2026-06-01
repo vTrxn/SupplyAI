@@ -135,12 +135,10 @@ export default function RutasView({ t, dark = true }: Props) {
       proveedor: nuevoPedido.proveedor || "",
       producto: nuevoPedido.producto || "",
       cantidad: Number(nuevoPedido.cantidad) || 1,
-      bold: undefined,
       unidad: nuevoPedido.unidad || "unidades",
       fecha: new Date().toISOString().slice(0, 10),
       estado: "pendiente",
       monto: Number(nuevoPedido.monto) || 0,
-      notes: undefined,
       notas: nuevoPedido.notas,
     };
     setPedidos(prev => [pedido, ...prev]);
@@ -222,7 +220,7 @@ export default function RutasView({ t, dark = true }: Props) {
                     <div key={p.id} style={{ padding: 20, background: t.bg2, borderRadius: 16, border: `1px solid ${t.border}`, position: "relative" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ width: 24, height: 24, borderRadius: "50%", background: t.accentBg, color: t.accent, display: "flex", alignItems: "center", justifyCenter: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>
+                          <div style={{ width: 24, height: 24, borderRadius: "50%", background: t.accentBg, color: t.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>
                             {index + 1}
                           </div>
                           <span style={{ fontSize: 14, fontWeight: 800 }}>Parada {index + 1}</span>
@@ -345,7 +343,7 @@ export default function RutasView({ t, dark = true }: Props) {
                     <div style={{ flex: 1, paddingTop: 6 }}>
                       <div style={{ fontSize: 14, fontWeight: 800, color: t.text }}>{p.nombre || `Parada ${index + 1}`}</div>
                       <div style={{ fontSize: 12, color: t.textSub, marginTop: 2 }}>{p.direccion || "Ingresa una dirección..."}</div>
-                      {p.notes && <div style={{ fontSize: 11, color: t.accent, marginTop: 4, fontStyle: "italic" }}>{p.notes}</div>}
+                      {p.notas && <div style={{ fontSize: 11, color: t.accent, marginTop: 4, fontStyle: "italic" }}>{p.notas}</div>}
                     </div>
                   </div>
                 ))}

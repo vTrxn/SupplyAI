@@ -219,6 +219,23 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
       return;
     }
 
+    // Verificar que todos los proveedores tengan un contacto registrado en localStorage
+    const uniqueProviderIds = Array.from(new Set(prods.map(p => p.provider_id!)));
+    for (const provId of uniqueProviderIds) {
+      const prov = providers.find(p => p.id === provId);
+      if (prov) {
+        const saved = localStorage.getItem(`provider_contact_${prov.id}`);
+        let contact = { phone: "", email: "" };
+        if (saved) {
+          try { contact = JSON.parse(saved); } catch (e) {}
+        }
+        if (!contact.phone && !contact.email) {
+          showToast(`El proveedor "${prov.name}" no tiene teléfono ni correo configurado. Configúralo en Proveedores para continuar.`, "error");
+          return;
+        }
+      }
+    }
+
     const grouped = prods.reduce((acc, p) => {
       const provId = p.provider_id!;
       if (!acc[provId]) acc[provId] = [];
@@ -333,7 +350,7 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
       <div className="card" style={{ padding: "24px 32px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", flex: 1 }}>
-            <div className="search-wrapper" style={{ minWidth: 260, flex: "1 1 auto", maxWidth: 350 }}>
+            <div id="tour-inventario-search" className="search-wrapper" style={{ minWidth: 260, flex: "1 1 auto", maxWidth: 350 }}>
               <span className="search-icon"><SearchIcon /></span>
               <input
                 className="search-input"
@@ -399,7 +416,7 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
           <table className="custom-table" style={{ borderSpacing: "0 8px" }}>
             <thead>
               <tr>
-                <th style={{ width: 48, paddingLeft: 24 }}>
+                <th id="tour-inventario-select-header" style={{ width: 48, paddingLeft: 24 }}>
                   <div 
                     onClick={(e) => {
                       e.stopPropagation();
@@ -420,8 +437,8 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
                       justifyContent: "center",
                       color: "white",
                       cursor: "pointer",
-                      opacity: selectedProductIds.length > 0 ? 1 : 0,
-                      pointerEvents: selectedProductIds.length > 0 ? "auto" : "none",
+                      opacity: selectedProductIds.length > 0 ? 1 : 0.4,
+                      pointerEvents: "auto",
                       transition: "opacity 0.2s"
                     }}
                   >
@@ -484,8 +501,8 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
                         background: isSelectedForOrder ? t.accent : "transparent",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         cursor: "pointer", 
-                        opacity: selectedProductIds.length > 0 ? 1 : 0,
-                        pointerEvents: selectedProductIds.length > 0 ? "auto" : "none",
+                        opacity: isSelectedForOrder ? 1 : 0.4,
+                        pointerEvents: "auto",
                         transition: "opacity 0.2s, border-color 0.2s, background-color 0.2s"
                       }}>
                         {isSelectedForOrder && (

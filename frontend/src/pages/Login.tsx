@@ -215,8 +215,10 @@ export default function Login() {
           )}
         </div>
 
-        <div style={{ textAlign:"center", marginTop:20, fontSize:12, color:t.textSub }}>
-          SupplyAI · Bogotá, Colombia 🇨🇴
+        <div style={{ textAlign:"center", marginTop:20, fontSize:12, color:t.textSub, display:"flex", flexDirection:"column", gap:4 }}>
+          <div style={{ fontWeight: 800, color: t.text, fontSize: 14 }}>SupplyAI</div>
+          <div>© {new Date().getFullYear()} — Plataforma de Inteligencia Predictiva. Todos los derechos reservados.</div>
+          <div style={{ marginTop: 4 }}>Bogotá, Colombia 🇨🇴</div>
         </div>
       </div>
     </div>

@@ -148,7 +148,7 @@ export default function MovementsView({ t, productos }: MovementsViewProps) {
       )}
 
       {/* Movements Card */}
-      <div className="card glass" style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div id="tour-movimientos-card" className="card glass" style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div className="table-container" style={{ padding: movements.length === 0 ? "0" : "0 32px 32px" }}>
           {loading ? (
             <div style={{ padding: 60, textAlign: "center", color: t.textSub }}>

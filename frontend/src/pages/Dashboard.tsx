@@ -14,6 +14,8 @@ import RutasView from "../components/RutasView";
 import AlertsView from "../components/AlertsView";
 import IntegrationsView from "../components/IntegrationsView";
 import ProveedoresView from "../components/ProveedoresView";
+import OnboardingTour from "../components/OnboardingTour";
+
 
 const I = {
   box: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>,
@@ -176,12 +178,36 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
 
+  const [onboardingActive, setOnboardingActive] = useState(false);
+  const [onboardingEnabled, setOnboardingEnabled] = useState(
+    localStorage.getItem("supplyai_onboarding_enabled") !== "false"
+  );
+
   useEffect(() => {
     if (!localStorage.getItem("token")) { window.location.href = "/"; return; }
     load();
+
+    // Mostrar SIEMPRE el tutorial interactivo al iniciar para propósitos de enseñanza y demostración
+    const tourEnabled = localStorage.getItem("supplyai_onboarding_enabled") !== "false";
+    if (tourEnabled) {
+      setOnboardingActive(true);
+    }
   }, []);
 
   const toggleDark = () => setDark(!dark);
+
+  const toggleOnboarding = () => {
+    const nextVal = !onboardingEnabled;
+    setOnboardingEnabled(nextVal);
+    localStorage.setItem("supplyai_onboarding_enabled", String(nextVal));
+    if (nextVal) {
+      localStorage.removeItem("supplyai_onboarding_completed");
+      setOnboardingActive(true);
+    } else {
+      setOnboardingActive(false);
+    }
+  };
+
 
   async function load() {
     setLoading(true); setErr("");
@@ -304,6 +330,15 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
                     <span className="toggle-handle" />
                   </button>
                 </div>
+                <div className="setting-row">
+                  <div className="setting-info">
+                    <span className="setting-name">Guía de Ayuda (Tips)</span>
+                    <span className="setting-desc">Muestra consejos y un tutorial interactivo</span>
+                  </div>
+                  <button className={`toggle-switch ${onboardingEnabled ? 'active' : ''}`} onClick={toggleOnboarding}>
+                    <span className="toggle-handle" />
+                  </button>
+                </div>
               </section>
 
               <section className="settings-section">
@@ -337,7 +372,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
       {editProd && <ProductModal mode="edit" product={editProd} t={t} onClose={() => setEditProd(null)} onSave={handleSave} onDelete={handleDelete} />}
 
       <div className={`sidebar-overlay ${menuOpen ? "mobile-open" : ""}`} onClick={() => setMenuOpen(false)} />
-      <aside className={`sidebar ${menuOpen ? "mobile-open" : ""}`} style={{ position: "sticky", top: 0, zIndex: 110 }}>
+      <aside id="tour-sidebar" className={`sidebar ${menuOpen ? "mobile-open" : ""}`} style={{ position: "sticky", top: 0, zIndex: 110 }}>
         <div className="sidebar-logo">
           <div className="logo-icon"><span style={szM}><I.box /></span></div>
           <div className="logo-text">Supply<span>AI</span></div>
@@ -409,7 +444,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
               <h1>{curNav.title}</h1>
             </div>
 
-            <div className="topbar-actions">
+            <div id="tour-topbar-actions" className="topbar-actions">
               {(nav === "dashboard" || nav === "inventario") && (
                 <div className="search-wrapper">
                   <span className="search-icon"><I.search /></span>
@@ -498,7 +533,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
                     </p>
                   </div>
                   <div>
-                    <button className="btn" onClick={() => { setChatMsg("Genera un resumen ejecutivo de mi operación y revisa alertas."); setChatOpen(true); }} style={{ background: "white", color: t.accent, padding: "14px 28px", borderRadius: 12, fontWeight: 800, fontSize: "1rem", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+                    <button id="tour-summary-btn" className="btn" onClick={() => { setChatMsg("Genera un resumen ejecutivo de mi operación y revisa alertas."); setChatOpen(true); }} style={{ background: "white", color: t.accent, padding: "14px 28px", borderRadius: 12, fontWeight: 800, fontSize: "1rem", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
                       <span style={szM}><I.bot /></span> Resumen IA Rápido
                     </button>
                   </div>
@@ -511,7 +546,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24 }}>
                 
                 {/* Left: Inventory Highlight Table */}
-                <div className="card" style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column", borderRadius: 24, border: `1px solid ${t.border}` }}>
+                <div id="tour-inventory-card" className="card" style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column", borderRadius: 24, border: `1px solid ${t.border}` }}>
                   <div style={{ padding: "28px 32px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: `linear-gradient(to right, transparent, ${t.bg3})` }}>
                     <div>
                       <h3 style={{ fontSize: 20, fontWeight: 800, color: t.text, display: "flex", alignItems: "center", gap: 10 }}>
@@ -577,7 +612,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
 
                 {/* Right: AI Alerts Panel */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                  <div className="card" style={{ padding: 28, borderRadius: 24, border: `1px solid ${t.border}`, background: t.bg2 }}>
+                  <div id="tour-alerts-card" className="card" style={{ padding: 28, borderRadius: 24, border: `1px solid ${t.border}`, background: t.bg2 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
                       <h3 style={{ fontSize: 18, fontWeight: 800, display: "flex", alignItems: "center", gap: 10 }}>
                         <span style={{ color: totalAl > 0 ? t.red : t.accent }}><I.bell /></span> Alertas Inteligentes
@@ -626,13 +661,15 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: (
           {nav === "integraciones" && <IntegrationsView t={t} dark={dark} />}
         </main>
 
-        <footer style={{ marginTop: "auto", padding: "24px", textAlign: "center", borderTop: `1px solid ${t.border}`, color: t.textSub, fontSize: 13, background: "transparent" }}>
-          <div style={{ fontWeight: 800, color: t.text, fontFamily: 'Outfit', fontSize: 15, marginBottom: 4 }}>SupplyAI</div>
-          <div>© {new Date().getFullYear()} — Plataforma de Inteligencia Predictiva. Todos los derechos reservados.</div>
-        </footer>
       </div>
 
       {chatOpen && <ChatPanel dark={dark} productos={products} alertas={alerts} initialMessage={chatMsg} onClose={() => { setChatOpen(false); setChatMsg(""); }} />}
+      {onboardingActive && (
+        <OnboardingTour
+          onClose={() => setOnboardingActive(false)}
+          onNavToSection={(sectionId) => setNav(sectionId)}
+        />
+      )}
     </div>
   );
 }
