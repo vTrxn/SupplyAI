@@ -494,8 +494,8 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
           <div className="sidebar-logo" style={{ marginBottom: 0, padding: 0 }}>
             <div className="logo-icon" style={{ width: 36, height: 36, boxShadow: "0 4px 10px var(--brand-primary-soft)" }}><span style={sz}><I.box /></span></div>
             <div className="logo-text" style={{ fontSize: "1.2rem" }}>
-              <span style={{ color: t.text }}>{curNav.title.slice(0, Math.ceil(curNav.title.length/2))}</span>
-              <span style={{ color: t.accent }}>{curNav.title.slice(Math.ceil(curNav.title.length/2))}</span>
+              <span style={{ color: t.text }}>{curNav.title.split(' ')[0]}</span>
+              {curNav.title.includes(' ') && <span style={{ color: t.accent }}>{" " + curNav.title.split(' ').slice(1).join(' ')}</span>}
               <span style={{ fontSize: 10, background: t.accent, color: "white", padding: "2px 6px", borderRadius: 4, marginLeft: 8, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
             </div>
           </div>
@@ -509,8 +509,8 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
             <div className="page-header desktop-only">
               <p>{curNav.label}</p>
               <h1>
-                <span style={{ color: t.text }}>{curNav.title.slice(0, Math.ceil(curNav.title.length/2))}</span>
-                <span style={{ color: t.accent }}>{curNav.title.slice(Math.ceil(curNav.title.length/2))}</span>
+                <span style={{ color: t.text }}>{curNav.title.split(' ')[0]}</span>
+                {curNav.title.includes(' ') && <span style={{ color: t.accent }}>{" " + curNav.title.split(' ').slice(1).join(' ')}</span>}
                 <span style={{ fontSize: 12, background: t.accent, color: "white", padding: "4px 8px", borderRadius: 6, marginLeft: 12, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
               </h1>
             </div>
