@@ -61,27 +61,16 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
   return (
     <>
     <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-      {/* Header Area */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: t.text }}>
-            His<span style={{ color: t.accent }}>torial</span>
-            <span style={{ fontSize: 10, background: t.accent, color: "white", padding: "2px 6px", borderRadius: 4, marginLeft: 8, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
-          </h2>
-          <p style={{ color: t.textSub, fontSize: 14 }}>Rastrea entradas, salidas y ajustes de stock en tiempo real</p>
-        </div>
-        <div style={{ display: "flex", gap: 12 }}>
-          {movements.length > 0 && (
-            <button className="btn btn-ghost" onClick={handleDownload} disabled={loading} style={{ background: "var(--bg-hover)", borderRadius: "50%", padding: 0, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} title="Descargar Historial">
-              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-            </button>
-          )}
-        </div>
-      </div>
+      {/* Header Area removed per user request to move content up */}
 
       {/* Movements Card */}
-      <div className="card glass" style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <div className="table-container" style={{ padding: movements.length === 0 ? "0" : "0 32px 32px" }}>
+      <div className="card glass" style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column", position: "relative" }}>
+        {movements.length > 0 && !loading && (
+          <button className="btn" onClick={handleDownload} disabled={loading} style={{ position: "absolute", top: 16, right: 16, background: "var(--success)", color: "white", borderRadius: "50%", padding: 0, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, zIndex: 10, boxShadow: "0 4px 12px rgba(0,0,0,0.15)", border: "none", cursor: "pointer" }} title="Descargar Historial en Excel">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+          </button>
+        )}
+        <div className="table-container" style={{ padding: movements.length === 0 ? "0" : "40px 32px 32px", marginTop: movements.length > 0 ? 16 : 0 }}>
           {loading ? (
             <div style={{ padding: 60, textAlign: "center", color: t.textSub }}>
               <div className="sk" style={{ height: 40, marginBottom: 12, borderRadius: "var(--radius-md)" }} />
