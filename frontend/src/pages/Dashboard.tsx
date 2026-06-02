@@ -698,7 +698,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
                       {totalAl > 0 && <span className="badge" style={{ background: t.redBg, color: t.red, padding: "4px 10px", borderRadius: 8, border: `1px solid ${t.red}33` }}>{totalAl} activas</span>}
                     </div>
                     
-                    <div className="ascroll" style={{ maxHeight: 420, position: "relative", zIndex: 1 }}>
+                    <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 8, position: "relative", zIndex: 1 }}>
                       {alerts.length === 0 ? (
                         <div style={{ textAlign: "center", padding: "40px 20px", background: t.bg2, borderRadius: 16, border: `1px dashed ${t.border}`, boxShadow: t.shadow }}>
                           <div style={{ fontSize: 32, marginBottom: 12 }}>✨</div>
