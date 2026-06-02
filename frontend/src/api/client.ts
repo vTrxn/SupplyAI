@@ -1,5 +1,5 @@
 // frontend/src/api/client.ts
-const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000") + "/api/v1";
+const BASE_URL = (import.meta.env.VITE_API_URL || "") + "/api/v1";
 
 function getToken() {
   return localStorage.getItem("token") || "";
@@ -135,7 +135,7 @@ export const clearMovements = () => apiFetch<void>("/inventory/movements", { met
 export const getAlerts = () => apiFetch<Alert[]>("/alerts");
 
 // ── Proveedores ────────────────────────────────────────────────────────────────
-export const getProviders = () => apiFetch<Provider[]>("/providers");
-export const createProvider = (data: Partial<Provider>) => apiFetch<Provider>("/providers", { method: "POST", body: JSON.stringify(data) });
+export const getProviders = () => apiFetch<Provider[]>("/providers/");
+export const createProvider = (data: Partial<Provider>) => apiFetch<Provider>("/providers/", { method: "POST", body: JSON.stringify(data) });
 export const updateProvider = (id: string, data: Partial<Provider>) => apiFetch<Provider>(`/providers/${id}`, { method: "PATCH", body: JSON.stringify(data) });
 export const deleteProvider = (id: string) => apiFetch<void>(`/providers/${id}`, { method: "DELETE" });
