@@ -786,7 +786,7 @@ body.modal-open .fab-button {
     display: flex !important;
   }
 
-  .nav-icon, .logo-icon {
+  .logo-icon {
     display: none !important;
   }
 
