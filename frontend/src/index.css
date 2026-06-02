@@ -843,6 +843,13 @@ body.modal-open .fab-button {
     border-bottom-left-radius: var(--radius-md) !important;
   }
 
+  .custom-table tr td.last-visible-mobile {
+    border-right: 1px solid var(--border) !important;
+    border-top-right-radius: var(--radius-md) !important;
+    border-bottom-right-radius: var(--radius-md) !important;
+  }
+
+
   .sidebar {
     position: fixed;
     top: 0 !important;

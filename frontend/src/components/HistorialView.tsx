@@ -103,7 +103,12 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
               <thead>
                 <tr>
                   {["Fecha", "Producto", "Tipo", "Cant. Total", "Balance", "Motivo"].map(h => (
-                    <th key={h} className={h === "Tipo" || h === "Motivo" || h === "Balance" ? "desktop-only" : ""} style={h === "Cant. Total" ? { textAlign: "center" } : {}}>{h}</th>
+                    <th key={h} 
+                      className={`${h === "Tipo" || h === "Motivo" || h === "Balance" ? "desktop-only" : ""} ${h === "Cant. Total" ? "last-visible-mobile" : ""}`} 
+                      style={h === "Cant. Total" || h === "Producto" ? { textAlign: "center" } : {}}
+                    >
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
@@ -116,7 +121,7 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
                       <td style={{ color: t.textSub, fontSize: 13, fontFamily: "JetBrains Mono" }}>
                         {new Date(m.date).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
                       </td>
-                      <td>
+                      <td style={{ textAlign: "center" }}>
                         <div style={{ fontWeight: 800, color: m.type === "entrada" ? "var(--success)" : m.type === "salida" ? "var(--error)" : t.text }}>
                           {prod?.name || "Eliminado"} {m.type === "salida" && <span style={{ opacity: 0.8, fontSize: "0.9em" }}> (x{m.quantity})</span>}
                         </div>
@@ -125,7 +130,7 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
                       <td className="desktop-only">
                         <span className="badge" style={{ background: meta.bg, color: meta.color, fontSize: 11 }}>{meta.label}</span>
                       </td>
-                      <td style={{ textAlign: "center" }}>
+                      <td className="last-visible-mobile" style={{ textAlign: "center" }}>
                         <span style={{ 
                           fontWeight: 800, 
                           color: m.type === "salida" ? "var(--success)" : t.text, 
