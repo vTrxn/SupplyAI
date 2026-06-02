@@ -15,12 +15,8 @@ import RutasView from "../components/RutasView";
 import AlertsView from "../components/AlertsView";
 import IntegrationsView from "../components/IntegrationsView";
 import ProveedoresView from "../components/ProveedoresView";
-<<<<<<< Updated upstream
 import OnboardingTour from "../components/OnboardingTour";
-
-=======
 import HistorialView from "../components/HistorialView";
->>>>>>> Stashed changes
 
 const I = {
   box: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>,
@@ -426,13 +422,8 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
       {editProd && <ProductModal mode="edit" product={editProd} t={t} onClose={() => setEditProd(null)} onSave={handleSave} onDelete={handleDelete} />}
 
       <div className={`sidebar-overlay ${menuOpen ? "mobile-open" : ""}`} onClick={() => setMenuOpen(false)} />
-<<<<<<< Updated upstream
       <aside id="tour-sidebar" className={`sidebar ${menuOpen ? "mobile-open" : ""}`} style={{ position: "sticky", top: 0, zIndex: 110 }}>
-=======
-      <aside className={`sidebar ${menuOpen ? "mobile-open" : ""}`}>
->>>>>>> Stashed changes
         <div className="sidebar-logo">
-          <div className="logo-icon"><span style={szM}><I.box /></span></div>
           <div className="logo-text">Supply<span>AI</span></div>
         </div>
 
@@ -487,7 +478,6 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div className="mobile-header" style={{ background: "var(--glass-bg)", backdropFilter: "blur(20px)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 40 }}>
           <div className="sidebar-logo" style={{ marginBottom: 0, padding: 0 }}>
-            <div className="logo-icon" style={{ width: 36, height: 36, boxShadow: "0 4px 10px var(--brand-primary-soft)" }}><span style={sz}><I.box /></span></div>
             <div className="logo-text" style={{ fontSize: "1.2rem" }}>{curNav.title}</div>
           </div>
           <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>
@@ -598,8 +588,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
                 </div>
               </div>
 
-=======
->>>>>>> Stashed changes
+
               {/* Redundant Metrics Grid Removed per user request */}
 
               {/* Data Layout Split */}
