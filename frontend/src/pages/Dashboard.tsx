@@ -193,6 +193,12 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
   );
 
   useEffect(() => {
+    if (window.innerWidth <= 1024 && nav === "dashboard") {
+      setNav("inventario");
+    }
+  }, []);
+
+  useEffect(() => {
     if (menuOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -425,7 +431,10 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
       <aside id="tour-sidebar" className={`sidebar ${menuOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-logo">
           <div className="logo-icon"><span style={szM}><I.box /></span></div>
-          <div className="logo-text">Supply<span>AI</span></div>
+          <div className="logo-text">
+            Supply<span>AI</span>
+            <span style={{ fontSize: 10, background: t.accent, color: "white", padding: "2px 6px", borderRadius: 4, marginLeft: 8, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
+          </div>
         </div>
 
         <nav className="nav-list">
