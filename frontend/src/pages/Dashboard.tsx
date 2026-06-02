@@ -594,7 +594,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
           {nav === "dashboard" && (
             <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: 32 }}>
               {/* Premium Solid Hero Banner */}
-              <div id="tour-hero-banner" className="hero-banner" style={{ borderRadius: 24, background: t.accent, color: "white", boxShadow: `0 12px 24px -8px ${t.accent}` }}>
+              <div id="tour-hero-banner" className="hero-banner" style={{ padding: "32px 40px", borderRadius: 24, background: t.accent, color: "white", boxShadow: `0 12px 24px -8px ${t.accent}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 24 }}>
                   <div>
                     <h2 style={{ fontSize: "2.2rem", fontWeight: 800, marginBottom: 8, letterSpacing: "-0.02em" }}>
@@ -602,7 +602,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
                     </h2>
                     <p style={{ fontSize: "1.05rem", opacity: 0.9, maxWidth: 650, lineHeight: 1.6, fontWeight: 500 }}>
                       Bienvenido a tu cadena de suministro inteligente. 
-                      Actualmente tienes <strong style={{ color: t.accent, background: "white", padding: "2px 8px", borderRadius: 6 }}>{totalAl} alertas</strong> pendientes y tu red cuenta con <strong style={{ color: t.accent, background: "white", padding: "2px 8px", borderRadius: 6 }}>{activos} productos</strong> activos listos para operar.
+                      Actualmente tienes <strong style={{ color: t.accent, background: "white", padding: "2px 8px", borderRadius: 6, whiteSpace: "nowrap" }}>{totalAl} alertas</strong> pendientes y tu red cuenta con <strong style={{ color: t.accent, background: "white", padding: "2px 8px", borderRadius: 6, whiteSpace: "nowrap" }}>{activos} productos</strong> activos listos para operar.
                     </p>
                   </div>
                   <div>
