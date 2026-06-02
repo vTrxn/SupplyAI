@@ -478,7 +478,7 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
 
             <button 
               className="btn mobile-flex-only mobile-filter-btn" 
-              style={{ padding: "0 16px", background: t.bg3, border: `1px solid ${t.border}`, color: t.textMain }}
+              style={{ padding: "0 16px", background: t.bg3, border: `1px solid ${t.border}`, color: t.text }}
               onClick={() => setShowMobileFilters(!showMobileFilters)}
             >
               <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
