@@ -47,7 +47,7 @@ const I = {
 };
 
 const NAV = [
-  { id: "dashboard", Icon: I.grid, label: "Dashboard" },
+  { id: "dashboard", Icon: I.grid, label: "Dashboard", hideMobile: true },
   { id: "inventario", Icon: I.box, label: "Inventario" },
   { id: "proveedores", Icon: I.database, label: "Proveedores", hideMobile: true },
   { id: "movimientos", Icon: I.scan, label: "Escáner", mobileOnly: true },
@@ -171,7 +171,7 @@ function ProductModal({ mode, product, t, onClose, onSave, onDelete }: {
 }
 
 export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: React.Dispatch<React.SetStateAction<boolean>> }) {
-  const [nav, setNav] = useState("dashboard");
+  const [nav, setNav] = useState(window.innerWidth <= 1024 ? "inventario" : "dashboard");
   const [products, setProducts] = useState<Product[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
@@ -422,7 +422,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
       {editProd && <ProductModal mode="edit" product={editProd} t={t} onClose={() => setEditProd(null)} onSave={handleSave} onDelete={handleDelete} />}
 
       <div className={`sidebar-overlay ${menuOpen ? "mobile-open" : ""}`} onClick={() => setMenuOpen(false)} />
-      <aside id="tour-sidebar" className={`sidebar ${menuOpen ? "mobile-open" : ""}`} style={{ position: "sticky", top: 0, zIndex: 110 }}>
+      <aside id="tour-sidebar" className={`sidebar ${menuOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-logo">
           <div className="logo-icon"><span style={szM}><I.box /></span></div>
           <div className="logo-text">Supply<span>AI</span></div>
@@ -571,7 +571,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
           {nav === "dashboard" && (
             <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: 32 }}>
               {/* Premium Solid Hero Banner */}
-              <div id="tour-hero-banner" style={{ padding: "36px 48px", borderRadius: 24, background: t.accent, color: "white", boxShadow: `0 12px 24px -8px ${t.accent}` }}>
+              <div id="tour-hero-banner" className="hero-banner" style={{ borderRadius: 24, background: t.accent, color: "white", boxShadow: `0 12px 24px -8px ${t.accent}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 24 }}>
                   <div>
                     <h2 style={{ fontSize: "2.2rem", fontWeight: 800, marginBottom: 8, letterSpacing: "-0.02em" }}>

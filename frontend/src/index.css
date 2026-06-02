@@ -161,7 +161,6 @@ code, pre {
   transition: all var(--transition-fast);
   border: 1px solid transparent;
   font-family: inherit;
-  color: var(--text-main);
 }
 
 .btn-primary {
@@ -785,6 +784,10 @@ body.modal-open .fab-button {
   }
   .mobile-flex-only {
     display: flex !important;
+  }
+
+  .nav-icon, .logo-icon {
+    display: none !important;
   }
 
   .mobile-flat {
