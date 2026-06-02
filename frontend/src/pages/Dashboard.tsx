@@ -3,8 +3,8 @@ import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import {
   getProducts, getAlerts, createProduct, updateProduct, deleteProduct, uploadImage,
-  getProviders,
-  type Product, type UserProfile, type Alert, type Provider,
+  getProviders, getMovements,
+  type Product, type UserProfile, type Alert, type Provider, type Movement,
 } from "../api/client";
 import ChatPanel from "../components/ChatPanel";
 import MovementsView from "../components/MovementsView";
@@ -175,6 +175,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
   const [products, setProducts] = useState<Product[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [movements, setMovements] = useState<Movement[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -256,8 +257,8 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
           }).catch(() => { });
         }
       }
-      const [p, a, provs] = await Promise.all([getProducts(), getAlerts(), getProviders()]);
-      setProducts(p); setAlerts(a); setProviders(provs);
+      const [p, a, provs, movs] = await Promise.all([getProducts(), getAlerts(), getProviders(), getMovements()]);
+      setProducts(p); setAlerts(a); setProviders(provs); setMovements(movs);
     }
     catch (e: any) { setErr(e.message || "Error cargando datos"); }
     finally { setLoading(false); }
@@ -307,6 +308,18 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
   const cats = new Set(products.map(p => p.category).filter(Boolean)).size;
   const criticas = alerts.filter(a => a.severity === "critical").length;
   const totalAl = alerts.length;
+
+  const todayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local format roughly
+  const dailyEarnings = movements.filter(m => {
+    if (m.type !== "salida") return false;
+    const mDate = new Date(m.date).toLocaleDateString("en-CA");
+    return mDate === todayStr;
+  }).reduce((sum, m) => {
+    const prod = products.find(p => p.id === m.product_id);
+    return sum + (m.quantity * (prod?.sale_price || 0));
+  }, 0);
+  const formattedEarnings = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(dailyEarnings);
+
   const initials = user?.full_name ? user.full_name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase() : user?.email?.slice(0, 2).toUpperCase() || "??";
   const displayName = user?.full_name || user?.email || "Usuario";
 
@@ -605,7 +618,10 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
                       Actualmente tienes <strong style={{ color: t.accent, background: "white", padding: "2px 8px", borderRadius: 6, whiteSpace: "nowrap" }}>{totalAl} alertas</strong> pendientes y tu red cuenta con <strong style={{ color: t.accent, background: "white", padding: "2px 8px", borderRadius: 6, whiteSpace: "nowrap" }}>{activos} productos</strong> activos listos para operar.
                     </p>
                   </div>
-                  <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <div className="desktop-only" style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", padding: "16px 24px", borderRadius: 16, backdropFilter: "blur(10px)", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ fontSize: 28, fontWeight: 800 }}>+{formattedEarnings}</div>
+                    </div>
                     <button id="tour-summary-btn" className="btn" onClick={() => { setChatMsg("Genera un resumen ejecutivo de mi operación y revisa alertas."); setChatOpen(true); }} style={{ background: "white", color: t.accent, padding: "14px 28px", borderRadius: 12, fontWeight: 800, fontSize: "1rem", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
                       <span style={szM}><I.bot /></span> Resumen IA Rápido
                     </button>
