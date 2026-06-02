@@ -434,7 +434,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
       <div className={`sidebar-overlay ${menuOpen ? "mobile-open" : ""}`} onClick={() => setMenuOpen(false)} />
       <aside id="tour-sidebar" className={`sidebar ${menuOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-logo">
-          <div className="logo-icon"><span style={szM}><I.box /></span></div>
+          <div className="logo-icon desktop-only"><span style={szM}><I.box /></span></div>
           <div className="logo-text">
             Supply<span>AI</span>
             <span style={{ fontSize: 10, background: t.accent, color: "white", padding: "2px 6px", borderRadius: 4, marginLeft: 8, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
@@ -492,7 +492,7 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div className="mobile-header" style={{ background: "var(--glass-bg)", backdropFilter: "blur(20px)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 40 }}>
           <div className="sidebar-logo" style={{ marginBottom: 0, padding: 0 }}>
-            <div className="logo-icon" style={{ width: 36, height: 36, boxShadow: "0 4px 10px var(--brand-primary-soft)" }}><span style={sz}><I.box /></span></div>
+            <div className="logo-icon desktop-only" style={{ width: 36, height: 36, boxShadow: "0 4px 10px var(--brand-primary-soft)" }}><span style={sz}><I.box /></span></div>
             <div className="logo-text" style={{ fontSize: "1.2rem" }}>
               <span style={{ color: t.text }}>{curNav.title.split(' ')[0]}</span>
               {curNav.title.includes(' ') && <span style={{ color: t.accent }}>{" " + curNav.title.split(' ').slice(1).join(' ')}</span>}
@@ -506,14 +506,16 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
 
         <main className="main-content">
           <header className="topbar desktop-only">
-            <div className="page-header desktop-only">
-              <p>{curNav.label}</p>
-              <h1>
-                <span style={{ color: t.text }}>{curNav.title.split(' ')[0]}</span>
-                {curNav.title.includes(' ') && <span style={{ color: t.accent }}>{" " + curNav.title.split(' ').slice(1).join(' ')}</span>}
-                <span style={{ fontSize: 12, background: t.accent, color: "white", padding: "4px 8px", borderRadius: 6, marginLeft: 12, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
-              </h1>
-            </div>
+            {nav !== "dashboard" ? (
+              <div className="page-header desktop-only">
+                <p>{curNav.label}</p>
+                <h1>
+                  <span style={{ color: t.text }}>{curNav.title.split(' ')[0]}</span>
+                  {curNav.title.includes(' ') && <span style={{ color: t.accent }}>{" " + curNav.title.split(' ').slice(1).join(' ')}</span>}
+                  <span style={{ fontSize: 12, background: t.accent, color: "white", padding: "4px 8px", borderRadius: 6, marginLeft: 12, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
+                </h1>
+              </div>
+            ) : <div />}
 
             <div id="tour-topbar-actions" className="topbar-actions">
               {(nav === "dashboard" || nav === "inventario") && (
