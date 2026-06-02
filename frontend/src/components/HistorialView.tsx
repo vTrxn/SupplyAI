@@ -102,8 +102,8 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
             <table className="custom-table" style={{ borderSpacing: "0 8px" }}>
               <thead>
                 <tr>
-                  {["Fecha", "Producto", "Tipo", "Cant/Total", "Balance", "Motivo"].map(h => (
-                    <th key={h} className={h === "Tipo" || h === "Motivo" || h === "Balance" ? "desktop-only" : ""}>{h}</th>
+                  {["Fecha", "Producto", "Tipo", "Cant. Total", "Balance", "Motivo"].map(h => (
+                    <th key={h} className={h === "Tipo" || h === "Motivo" || h === "Balance" ? "desktop-only" : ""} style={h === "Cant. Total" ? { textAlign: "center" } : {}}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -125,15 +125,15 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
                       <td className="desktop-only">
                         <span className="badge" style={{ background: meta.bg, color: meta.color, fontSize: 11 }}>{meta.label}</span>
                       </td>
-                      <td>
+                      <td style={{ textAlign: "center" }}>
                         <span style={{ 
                           fontWeight: 800, 
-                          color: m.type === "entrada" ? "var(--success)" : m.type === "salida" ? "var(--error)" : t.text, 
+                          color: m.type === "salida" ? "var(--success)" : t.text, 
                           fontFamily: "JetBrains Mono", 
                           fontSize: 15 
                         }}>
                           {m.type === "salida" 
-                            ? `-$${((prod?.sale_price || 0) * m.quantity).toLocaleString("es-CO")}` 
+                            ? `+$${((prod?.sale_price || 0) * m.quantity).toLocaleString("es-CO")}` 
                             : `+${m.quantity}`}
                         </span>
                       </td>
