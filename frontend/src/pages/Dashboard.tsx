@@ -211,9 +211,9 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
     if (!localStorage.getItem("token")) { window.location.href = "/"; return; }
     load();
 
-    // Mostrar SIEMPRE el tutorial interactivo al iniciar para propósitos de enseñanza y demostración
+    // Mostrar SIEMPRE el tutorial interactivo al iniciar para propósitos de enseñanza y demostración en escritorio
     const tourEnabled = localStorage.getItem("supplyai_onboarding_enabled") !== "false";
-    if (tourEnabled) {
+    if (tourEnabled && window.innerWidth > 1024) {
       setOnboardingActive(true);
     }
   }, []);
@@ -226,7 +226,11 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
     localStorage.setItem("supplyai_onboarding_enabled", String(nextVal));
     if (nextVal) {
       localStorage.removeItem("supplyai_onboarding_completed");
-      setOnboardingActive(true);
+      if (window.innerWidth > 1024) {
+        setOnboardingActive(true);
+      } else {
+        alert("La guía interactiva de 6 pasos está optimizada solo para la versión de computadora.");
+      }
     } else {
       setOnboardingActive(false);
     }
