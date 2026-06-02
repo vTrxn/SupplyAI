@@ -837,7 +837,7 @@ body.modal-open .fab-button {
     padding: 12px 10px !important;
   }
   
-  .custom-table tr td:nth-child(2) {
+  .custom-table.hide-first-col-mobile tr td:nth-child(2) {
     border-left: 1px solid var(--border) !important;
     border-top-left-radius: var(--radius-md) !important;
     border-bottom-left-radius: var(--radius-md) !important;

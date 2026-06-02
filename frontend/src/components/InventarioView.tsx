@@ -525,7 +525,7 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
         </div>
 
         <div className="table-container" style={{ minHeight: 300 }} onClick={() => setContextMenu(null)}>
-          <table className="custom-table">
+          <table className="custom-table hide-first-col-mobile">
             <thead>
               <tr>
                 <th id="tour-inventario-select-header" className="desktop-only" style={{ width: 48, paddingLeft: 24 }}>
