@@ -102,7 +102,7 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
             <table className="custom-table" style={{ borderSpacing: "0 8px" }}>
               <thead>
                 <tr>
-                  {["Fecha", "Producto", "Tipo", "Cantidad", "Balance", "Motivo"].map(h => (
+                  {["Fecha", "Producto", "Tipo", "Cant/Total", "Balance", "Motivo"].map(h => (
                     <th key={h} className={h === "Tipo" || h === "Motivo" || h === "Balance" ? "desktop-only" : ""}>{h}</th>
                   ))}
                 </tr>
@@ -117,7 +117,9 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
                         {new Date(m.date).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
                       </td>
                       <td>
-                        <div style={{ fontWeight: 800, color: m.type === "entrada" ? "var(--success)" : m.type === "salida" ? "var(--error)" : t.text }}>{prod?.name || "Eliminado"}</div>
+                        <div style={{ fontWeight: 800, color: m.type === "entrada" ? "var(--success)" : m.type === "salida" ? "var(--error)" : t.text }}>
+                          {prod?.name || "Eliminado"} {m.type === "salida" && <span style={{ opacity: 0.8, fontSize: "0.9em" }}> (x{m.quantity})</span>}
+                        </div>
                         <div style={{ fontSize: 11, color: t.textSub, fontFamily: "JetBrains Mono" }}>{prod?.sku || "N/A"}</div>
                       </td>
                       <td className="desktop-only">
@@ -130,7 +132,9 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
                           fontFamily: "JetBrains Mono", 
                           fontSize: 15 
                         }}>
-                          {m.type === "salida" ? "-" : "+"}{m.quantity}
+                          {m.type === "salida" 
+                            ? `-$${((prod?.sale_price || 0) * m.quantity).toLocaleString("es-CO")}` 
+                            : `+${m.quantity}`}
                         </span>
                       </td>
                       <td className="desktop-only">
