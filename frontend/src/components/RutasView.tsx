@@ -59,12 +59,6 @@ export default function RutasView({ t, dark = true }: Props) {
     nombre: "Bodega Principal",
     direccion: "Calle 72 #10-07, Bogotá",
   });
-  
-  const [destino, setDestino] = useState<Parada>({
-    id: "destino",
-    nombre: "Destino de Retorno",
-    direccion: "Avenida Carrera 19 #127-10, Bogotá",
-  });
 
   const [paradas, setParadas] = useState<Parada[]>([]);
   const [appNavegacion, setAppNavegacion] = useState<"google_maps" | "waze" | "apple_maps">("google_maps");
@@ -89,20 +83,21 @@ export default function RutasView({ t, dark = true }: Props) {
   function cargarEjemplos() {
     setOrigen({ id: "origen", nombre: "Bodega Principal SupplyAI", direccion: "Calle 72 #10-07, Bogotá" });
     setParadas(EJEMPLOS_PARADAS);
-    setDestino({ id: "destino", nombre: "Punto de Acopio Final", direccion: "Carrera 7 #127-10, Bogotá" });
   }
 
   function abrirNavegacion() {
     const originAddr = encodeURIComponent(origen.direccion.trim());
-    const destAddr = encodeURIComponent(destino.direccion.trim());
     
-    if (!origen.direccion.trim() || !destino.direccion.trim()) {
-      alert("Por favor, ingresa al menos la dirección del Punto de partida y del Destino final.");
+    if (!origen.direccion.trim() || paradas.length === 0) {
+      alert("Por favor, ingresa el punto de partida y al menos una parada.");
       return;
     }
 
+    const lastParada = paradas[paradas.length - 1];
+    const destAddr = encodeURIComponent(lastParada.direccion.trim());
+
     if (appNavegacion === "google_maps") {
-      const waypoints = paradas
+      const waypoints = paradas.slice(0, -1)
         .map(p => encodeURIComponent(p.direccion.trim()))
         .filter(Boolean)
         .join("%7C"); // pipe character |
@@ -110,7 +105,7 @@ export default function RutasView({ t, dark = true }: Props) {
       const url = `https://www.google.com/maps/dir/?api=1&origin=${originAddr}&destination=${destAddr}${waypoints ? `&waypoints=${waypoints}` : ""}&travelmode=driving`;
       window.open(url, "_blank");
     } else if (appNavegacion === "apple_maps") {
-      const waypointsPart = paradas
+      const waypointsPart = paradas.slice(0, -1)
         .map(p => encodeURIComponent(p.direccion.trim()))
         .filter(Boolean)
         .map(w => `${w}+to:`)
@@ -238,14 +233,6 @@ export default function RutasView({ t, dark = true }: Props) {
               )}
             </div>
 
-            {/* Destino Final */}
-            <div style={{ background: t.bg2, border: `1px solid ${t.border}`, borderRadius: 16, padding: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: t.accent, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 12 }}>Punto / Destino Final</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <input style={inpStyle} placeholder="Nombre de destino (ej. Retorno o Punto Final)" value={destino.nombre} onChange={e => setDestino(prev => ({ ...prev, nombre: e.target.value }))} />
-                <input style={inpStyle} placeholder="Dirección física" value={destino.direccion} onChange={e => setDestino(prev => ({ ...prev, direccion: e.target.value }))} />
-              </div>
-            </div>
           </div>
 
           {/* Panel Derecho: Selector de Aplicación de Navegación y Línea de Tiempo */}
@@ -330,34 +317,26 @@ export default function RutasView({ t, dark = true }: Props) {
                 </div>
 
                 {/* Paradas Intermedias */}
-                {paradas.map((p, index) => (
-                  <div key={p.id} style={{ display: "flex", gap: 16, marginBottom: 24, position: "relative", zIndex: 2 }}>
-                    <div style={{ 
-                      width: 36, height: 36, borderRadius: "50%", 
-                      background: t.accentBg, color: t.accent, 
-                      display: "flex", alignItems: "center", justifyContent: "center", 
-                      fontSize: 13, fontWeight: 800, border: `2px solid ${t.bg2}` 
-                    }}>
-                      {index + 1}
+                {paradas.map((p, index) => {
+                  const isLast = index === paradas.length - 1;
+                  return (
+                    <div key={p.id} style={{ display: "flex", gap: 16, marginBottom: isLast ? 0 : 24, position: "relative", zIndex: 2 }}>
+                      <div style={{ 
+                        width: 36, height: 36, borderRadius: "50%", 
+                        background: t.accentBg, color: t.accent, 
+                        display: "flex", alignItems: "center", justifyContent: "center", 
+                        fontSize: 13, fontWeight: 800, border: `2px solid ${t.bg2}` 
+                      }}>
+                        {isLast ? "🏁" : (index + 1)}
+                      </div>
+                      <div style={{ flex: 1, paddingTop: 6 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: t.text }}>{p.nombre || `Parada ${index + 1}`}</div>
+                        <div style={{ fontSize: 12, color: t.textSub, marginTop: 2 }}>{p.direccion || "Ingresa una dirección..."}</div>
+                        {p.notas && <div style={{ fontSize: 11, color: t.accent, marginTop: 4, fontStyle: "italic" }}>{p.notas}</div>}
+                      </div>
                     </div>
-                    <div style={{ flex: 1, paddingTop: 6 }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: t.text }}>{p.nombre || `Parada ${index + 1}`}</div>
-                      <div style={{ fontSize: 12, color: t.textSub, marginTop: 2 }}>{p.direccion || "Ingresa una dirección..."}</div>
-                      {p.notas && <div style={{ fontSize: 11, color: t.accent, marginTop: 4, fontStyle: "italic" }}>{p.notas}</div>}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Paso Final: Destino */}
-                <div style={{ display: "flex", gap: 16, position: "relative", zIndex: 2 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: t.accentBg, color: t.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, border: `2px solid ${t.bg2}` }}>
-                    🏁
-                  </div>
-                  <div style={{ flex: 1, paddingTop: 4 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: t.text }}>{destino.nombre || "Destino Final"}</div>
-                    <div style={{ fontSize: 12, color: t.textSub, marginTop: 2 }}>{destino.direccion || "Ingresa una dirección..."}</div>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
             </div>
           </div>
