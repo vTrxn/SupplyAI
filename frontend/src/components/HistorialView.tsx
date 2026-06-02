@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { getMovements, createMovement, clearMovements, type Movement, type MovementCreate, type Product } from "../api/client";
 
 interface MovementsViewProps {
@@ -65,10 +66,11 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
 
       {/* Movements Card */}
       <div className="card glass" style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column", position: "relative" }}>
-        {movements.length > 0 && !loading && (
-          <button className="btn" onClick={handleDownload} disabled={loading} style={{ position: "fixed", bottom: 24, right: 24, background: "var(--success)", color: "white", borderRadius: "50%", padding: 0, width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, zIndex: 100, boxShadow: "0 6px 16px rgba(0,0,0,0.2)", border: "none", cursor: "pointer", transition: "transform 0.2s" }} title="Descargar Historial en Excel" onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"} onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
+        {movements.length > 0 && !loading && createPortal(
+          <button className="btn" onClick={handleDownload} disabled={loading} style={{ position: "fixed", bottom: 24, right: 24, background: "var(--success)", color: "white", borderRadius: "50%", padding: 0, width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, zIndex: 9999, boxShadow: "0 6px 16px rgba(0,0,0,0.2)", border: "none", cursor: "pointer", transition: "transform 0.2s" }} title="Descargar Historial en Excel" onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"} onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-          </button>
+          </button>,
+          document.body
         )}
         <div className="table-container" style={{ padding: movements.length === 0 ? "0" : "40px 32px 32px", marginTop: movements.length > 0 ? 16 : 0 }}>
           {loading ? (
