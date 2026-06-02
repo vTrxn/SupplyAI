@@ -590,8 +590,6 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
                 </div>
               </div>
 
-=======
->>>>>>> Stashed changes
               {/* Redundant Metrics Grid Removed per user request */}
 
               {/* Data Layout Split */}
