@@ -139,14 +139,14 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
                         }}>
                           {m.type === "salida" 
                             ? `+$${((prod?.sale_price || 0) * m.quantity).toLocaleString("es-CO")}` 
-                            : `+${m.quantity}`}
+                            : `+${m.quantity} ${prod?.unit || ""}`}
                         </span>
                       </td>
                       <td className="desktop-only">
                         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-                          <span style={{ color: t.textSub }}>{m.previous_stock ?? 0}</span>
+                          <span style={{ color: t.textSub }}>{m.previous_stock ?? 0} {prod?.unit || ""}</span>
                           <span style={{ color: t.textDim }}>→</span>
-                          <span style={{ color: t.text, fontWeight: 700 }}>{m.posterior_stock ?? 0}</span>
+                          <span style={{ color: t.text, fontWeight: 700 }}>{m.posterior_stock ?? 0} {prod?.unit || ""}</span>
                         </div>
                       </td>
                       <td className="desktop-only">
