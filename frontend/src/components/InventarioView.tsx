@@ -629,9 +629,9 @@ export default function InventarioView({ t, productos, providers, onUpdate, onCr
                     <td className="product-col-mobile">
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         {p.image_url ? (
-                          <img src={p.image_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover" }} />
+                          <img src={p.image_url} alt="" className="desktop-only" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover" }} />
                         ) : (
-                          <div style={{ width: 40, height: 40, borderRadius: 8, background: t.bg3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>📦</div>
+                          <div className="desktop-only" style={{ width: 40, height: 40, borderRadius: 8, background: t.bg3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>📦</div>
                         )}
                         <div>
                           <div style={{ fontWeight: 800, color: isSelectedForOrder ? t.accent : t.text, fontSize: 13 }}>{p.name}</div>
