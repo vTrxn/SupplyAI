@@ -702,3 +702,4 @@ export default function ProveedoresView({ t, productos, providers, onUpdate }: P
     </>
   );
 }
+

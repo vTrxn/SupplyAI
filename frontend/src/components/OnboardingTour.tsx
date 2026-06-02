@@ -330,3 +330,4 @@ export default function OnboardingTour({ onClose, onNavToSection }: OnboardingTo
     </>
   );
 }
+

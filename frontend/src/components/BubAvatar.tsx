@@ -10,3 +10,4 @@ export default function BubAvatar({ size = 24 }: { size?: number }) {
     </svg>
   );
 }
+

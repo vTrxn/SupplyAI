@@ -493,7 +493,11 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
         <div className="mobile-header" style={{ background: "var(--glass-bg)", backdropFilter: "blur(20px)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 40 }}>
           <div className="sidebar-logo" style={{ marginBottom: 0, padding: 0 }}>
             <div className="logo-icon" style={{ width: 36, height: 36, boxShadow: "0 4px 10px var(--brand-primary-soft)" }}><span style={sz}><I.box /></span></div>
-            <div className="logo-text" style={{ fontSize: "1.2rem" }}>{curNav.title}</div>
+            <div className="logo-text" style={{ fontSize: "1.2rem" }}>
+              <span style={{ color: t.text }}>{curNav.title.slice(0, Math.ceil(curNav.title.length/2))}</span>
+              <span style={{ color: t.accent }}>{curNav.title.slice(Math.ceil(curNav.title.length/2))}</span>
+              <span style={{ fontSize: 10, background: t.accent, color: "white", padding: "2px 6px", borderRadius: 4, marginLeft: 8, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
+            </div>
           </div>
           <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>
             <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
@@ -504,7 +508,11 @@ export default function Dashboard({ dark, setDark }: { dark: boolean; setDark: R
           <header className="topbar desktop-only">
             <div className="page-header desktop-only">
               <p>{curNav.label}</p>
-              <h1>{curNav.title}</h1>
+              <h1>
+                <span style={{ color: t.text }}>{curNav.title.slice(0, Math.ceil(curNav.title.length/2))}</span>
+                <span style={{ color: t.accent }}>{curNav.title.slice(Math.ceil(curNav.title.length/2))}</span>
+                <span style={{ fontSize: 12, background: t.accent, color: "white", padding: "4px 8px", borderRadius: 6, marginLeft: 12, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
+              </h1>
             </div>
 
             <div id="tour-topbar-actions" className="topbar-actions">

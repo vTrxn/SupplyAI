@@ -219,3 +219,4 @@ export default function ChatPanel({ initialMessage, onClose, productos, alertas 
     </>
   );
 }
+

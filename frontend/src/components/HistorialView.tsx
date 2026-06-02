@@ -64,8 +64,11 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
       {/* Header Area */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h2 style={{ fontSize: 24, fontWeight: 800 }}>Historial de Movimientos</h2>
-          <p style={{ color: t.textSub, fontSize: 14 }}>{movements.length} transacciones registradas</p>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: t.text }}>
+            Historial de <span style={{ color: t.accent }}>Movimientos</span>
+            <span style={{ fontSize: 10, background: t.accent, color: "white", padding: "2px 6px", borderRadius: 4, marginLeft: 8, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
+          </h2>
+          <p style={{ color: t.textSub, fontSize: 14 }}>Rastrea entradas, salidas y ajustes de stock en tiempo real</p>
         </div>
         <div style={{ display: "flex", gap: 12 }}>
           {movements.length > 0 && (
@@ -109,7 +112,7 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
               <thead>
                 <tr>
                   {["Fecha", "Producto", "Tipo", "Cantidad", "Balance", "Motivo"].map(h => (
-                    <th key={h} className={h === "Tipo" || h === "Motivo" ? "desktop-only" : ""}>{h}</th>
+                    <th key={h} className={h === "Tipo" || h === "Motivo" || h === "Balance" ? "desktop-only" : ""}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -139,11 +142,11 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
                           {m.type === "salida" ? "-" : "+"}{m.quantity}
                         </span>
                       </td>
-                      <td>
+                      <td className="desktop-only">
                         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
                           <span style={{ color: t.textSub }}>{m.previous_stock ?? 0}</span>
                           <span style={{ color: t.textDim }}>→</span>
-                          <span style={{ fontWeight: 800 }}>{m.posterior_stock ?? 0}</span>
+                          <span style={{ color: t.text, fontWeight: 700 }}>{m.posterior_stock ?? 0}</span>
                         </div>
                       </td>
                       <td className="desktop-only">
@@ -163,3 +166,4 @@ export default function HistorialView({ t, productos }: MovementsViewProps) {
     </>
   );
 }
+

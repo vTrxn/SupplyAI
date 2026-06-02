@@ -17,7 +17,7 @@ export default function AlertsView({ t, dark, alerts, onOpenChatAlert }: AlertsV
       {/* Header Area */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h2 style={{ fontSize: 24, fontWeight: 800 }}>Centro de Notificaciones</h2>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: t.text }}>Centro de <span style={{ color: t.accent }}>Notificaciones</span> <span style={{ fontSize: 10, background: t.accent, color: "white", padding: "2px 6px", borderRadius: 4, marginLeft: 8, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span></h2>
           <p style={{ color: t.textSub, fontSize: 14 }}>
             {alerts.length} eventos monitoreados por SupplyAI
           </p>
@@ -137,3 +137,4 @@ export default function AlertsView({ t, dark, alerts, onOpenChatAlert }: AlertsV
     </div>
   );
 }
+

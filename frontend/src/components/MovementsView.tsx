@@ -80,7 +80,10 @@ export default function MovementsView({ t, productos }: MovementsViewProps) {
   return (
     <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: 32 }}>
       <div>
-        <h2 style={{ fontSize: 24, fontWeight: 800 }}>Escáner de Movimientos</h2>
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: t.text }}>
+          Escáner de <span style={{ color: t.accent }}>Movimientos</span>
+          <span style={{ fontSize: 10, background: t.accent, color: "white", padding: "2px 6px", borderRadius: 4, marginLeft: 8, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span>
+        </h2>
         <p style={{ color: t.textSub, fontSize: 14 }}>Escanea el código QR de un producto para registrar entrada o salida</p>
       </div>
 
@@ -130,3 +133,4 @@ export default function MovementsView({ t, productos }: MovementsViewProps) {
     </div>
   );
 }
+

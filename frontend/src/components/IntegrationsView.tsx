@@ -97,7 +97,7 @@ export default function IntegrationsView({ t, dark }: IntegrationsViewProps) {
         {/* Header Area */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16 }}>
           <div>
-            <h2 style={{ fontSize: 24, fontWeight: 800 }}>Exportar Datos</h2>
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: t.text }}>Exportar <span style={{ color: t.accent }}>Datos</span> <span style={{ fontSize: 10, background: t.accent, color: "white", padding: "2px 6px", borderRadius: 4, marginLeft: 8, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span></h2>
             <p style={{ color: t.textSub, fontSize: 14, marginTop: 4 }}>
               Descarga tus inventarios en formatos compatibles para tus sistemas externos.
             </p>

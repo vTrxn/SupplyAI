@@ -69,7 +69,7 @@ export default function ForecastView({ t, productos, onNavToInventario }: Foreca
         <div style={{ padding: "24px 32px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800 }}>Proyecciones Inteligentes</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: t.text }}>Proyecciones <span style={{ color: t.accent }}>Inteligentes</span> <span style={{ fontSize: 10, background: t.accent, color: "white", padding: "2px 6px", borderRadius: 4, marginLeft: 8, verticalAlign: "middle", fontWeight: 800, letterSpacing: "1px" }}>BETA</span></h3>
               <div className="tooltip-container" style={{ position: "relative", display: "inline-flex", cursor: "help" }}>
                 <span style={{ fontSize: 14, color: t.textSub }}>💡</span>
                 <div className="tooltip-content" style={{
@@ -177,3 +177,4 @@ export default function ForecastView({ t, productos, onNavToInventario }: Foreca
     </div>
   );
 }
+

@@ -188,3 +188,4 @@ export default function AsistenteView({ t, productos, alertas }: AsistenteViewPr
     </div>
   );
 }
+
