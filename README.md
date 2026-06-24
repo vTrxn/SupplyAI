@@ -90,7 +90,7 @@ which python  # macOS/Linux
 pip install -r requirements.txt
 ```
 
-> ⏱️ **Nota:** La primera instalación puede tardar 3–5 minutos porque Prophet y XGBoost son paquetes pesados.
+>  **Nota:** La primera instalación puede tardar 3–5 minutos porque Prophet y XGBoost son paquetes pesados.
 
 ### 4. Inicializar la base de datos
 
